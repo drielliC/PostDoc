@@ -1,0 +1,85 @@
+#PIPELINE                          @driellic
+https://nf-co.re/methylseq/2.6.0/docs/output/
+
+#Preparo_index 
+
+singularity exec --bind /Storage/data2/drielli.canal:/mnt \
+/Storage/data2/drielli.canal/work/singularity/depot.galaxyproject.org-singularity-bismark-0.24.0--hdfd78af_0.img \
+bismark_genome_preparation /mnt/bismark_index
+
+
+_______________________________________________________________________________________________________________________
+  GNU nano 2.3.1                                                  Arquivo: bwa_bowtie2_index.sh                                                                                                             
+
+#!/bin/bash
+#$ -q all.q                     # Especifica a fila
+#$ -cwd                         # Executa no diretório atual
+#$ -V                           # Exporta variáveis de ambiente
+#$ -pe smp 15                   # Aloca 15 CPUs
+
+# Carregar módulos necessários (bwa e bowtie2, ajuste de acordo com seu ambiente)
+module load bwa/0.7.17
+module load Bowtie2/2.4.1
+
+# Caminhos para os arquivos FASTA e diretórios de índice
+HAP1_FASTA="/Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final.fa"
+HAP2_FASTA="/Storage/data2/drielli.canal/yahs.PITALB_v0.2.hap2.pugedups_scaffolds_final.fa"
+
+BWA_INDEX_DIR="/Storage/data2/drielli.canal/indices"
+BOWTIE2_INDEX_DIR="/Storage/data2/drielli.canal/indices"
+
+# Criar diretórios de índice se não existirem
+mkdir -p $BWA_INDEX_DIR
+mkdir -p $BOWTIE2_INDEX_DIR
+
+# Indexação com BWA para a haplofase 1
+echo "Indexando haplofase 1 com BWA..."
+bwa index $HAP1_FASTA
+
+# Indexação com BWA para a haplofase 2
+echo "Indexando haplofase 2 com BWA..."
+bwa index $HAP2_FASTA
+
+# Indexação com Bowtie2 para a haplofase 1
+echo "Indexando haplofase 1 com Bowtie2..."
+bowtie2-build $HAP1_FASTA $BOWTIE2_INDEX_DIR/hap1_bowtie2_index
+
+# Indexação com Bowtie2 para a haplofase 2
+echo "Indexando haplofase 2 com Bowtie2..."
+bowtie2-build $HAP2_FASTA $BOWTIE2_INDEX_DIR/hap2_bowtie2_index
+
+echo "Indexação concluída."
+
+_________________________________________________________________________________________
+
+#!/bin/bash
+
+#$ -q all.q               # Submete para a fila 'all.q'
+#$ -cwd                   # Executa no diretório atual
+#$ -V                     # Exporta todas as variáveis de ambiente
+#$ -pe smp 15             # Usa 15 CPUs
+#$ -N methylseq_run        # Nome do job
+#$ -o methylseq_output_hap1.log # Arquivo de saída
+#$ -e methylseq_error_hap1.log  # Arquivo de erro
+
+# Carrega o módulo do Nextflow e Singularity
+module load nextflow
+module load singularity-ce/3.11.2
+
+# Configurar o cache do Singularity
+export NXF_SINGULARITY_CACHEDIR="/Storage/data2/drielli.canal/work/singularity"
+
+# Rodando o pipeline nf-core/methylseq com os parâmetros e genomas de haplofase 1 e 2
+nextflow run nf-core/methylseq \
+  --input /Storage/data2/drielli.canal/samplesheet.csv \
+  --outdir ./results_hap1/ \
+  --fasta /Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final.fa \
+  --bwa_index /Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final \
+  --bowtie2_index /Storage/data2/drielli.canal/indices/hap1_bowtie2_index \
+  --bismark_index /Storage/data2/drielli.canal/bismark_index \
+  --max_memory '60 GB' \
+  --max_cpus 15 \
+  -profile singularity
+
+
+
