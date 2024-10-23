@@ -1,85 +1,61 @@
 #PIPELINE                          @driellic
 https://nf-co.re/methylseq/2.6.0/docs/output/
 
-#Preparo_index 
+# Rodando o pipeline nf-core/methylseq com os parâmetros
 
-singularity exec --bind /Storage/data2/drielli.canal:/mnt \
-/Storage/data2/drielli.canal/work/singularity/depot.galaxyproject.org-singularity-bismark-0.24.0--hdfd78af_0.img \
-bismark_genome_preparation /mnt/bismark_index
+nextflow run nf-core/methylseq --outdir ./results --fasta /Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hic.p_ctg_purged_scaffolds_final.mod2.fa --input /Storage/data2/drielli.canal/samplesheet.csv --aligner bismark -profile singularity
 
 
-_______________________________________________________________________________________________________________________
-  GNU nano 2.3.1                                                  Arquivo: bwa_bowtie2_index.sh                                                                                                             
+sample,fastq_1,fastq_2
+ALB_CHA_720E,ALB_CHA_720E_1.fastq.gz,ALB_CHA_720E_2.fastq.gz
+ALB_CHA738,ALB_CHA738_1.fastq.gz,ALB_CHA738_2.fastq.gz
+ALB_CHA744,ALB_CHA744_1.fastq.gz,ALB_CHA744_2.fastq.gz
+ALB_CHA_747,ALB_CHA_747_1.fastq.gz,ALB_CHA_747_2.fastq.gz
+ALB_CHA_748A,ALB_CHA_748A_1.fastq.gz,ALB_CHA_748A_2.fastq.gz
+ALB_CHA_749B,ALB_CHA_749B_1.fastq.gz,ALB_CHA_749B_2.fastq.gz
+ALB_CHA_750,ALB_CHA_750_1.fastq.gz,ALB_CHA_750_2.fastq.gz
+ALB_PBO_659,ALB_PBO_659_1.fastq.gz,ALB_PBO_659_2.fastq.gz
+ALB_PBO_668,ALB_PBO_668_1.fastq.gz,ALB_PBO_668_2.fastq.gz
+ALB_PBO_669,ALB_PBO_669_1.fastq.gz,ALB_PBO_669_2.fastq.gz
+ALB_PBO_670,ALB_PBO_670_1.fastq.gz,ALB_PBO_670_2.fastq.gz
+ALB_PBO674A,ALB_PBO674A_1.fastq.gz,ALB_PBO674A_2.fastq.gz
+ALB_PBO_678,ALB_PBO_678_1.fastq.gz,ALB_PBO_678_2.fastq.gz
+ALB_PBO_681,ALB_PBO_681_1.fastq.gz,ALB_PBO_681_2.fastq.gz
+ALB_URC_106,ALB_URC_106_1.fastq.gz,ALB_URC_106_2.fastq.gz
+ALB_URC_119,ALB_URC_119_1.fastq.gz,ALB_URC_119_2.fastq.gz
+ALB_URC_131,ALB_URC_131_1.fastq.gz,ALB_URC_131_2.fastq.gz
+ALB_URC_725,ALB_URC_725_1.fastq.gz,ALB_URC_725_2.fastq.gz
+HIB_CHA_720F,HIB_CHA_720F_1.fastq.gz,HIB_CHA_720F_2.fastq.gz
+HIB_CHA720F,HIB_CHA720F_2.fastq.gz,
+HIB_CHA_720G,HIB_CHA_720G_1.fastq.gz,HIB_CHA_720G_2.fastq.gz
+HIB_CHA_720D,HIB_CHA_720D_1.fastq.gz,HIB_CHA_720D_2.fastq.gz
+HIB_URC_111,HIB_URC_111_1.fastq.gz,HIB_URC_111_2.fastq.gz
+HIB_URC_215,HIB_URC_215_1.fastq.gz,HIB_URC_215_2.fastq.gz
+HIB_URC_218,HIB_URC_218_1.fastq.gz,HIB_URC_218_2.fastq.gz
+HIB_URC_219,HIB_URC_219_1.fastq.gz,HIB_URC_219_2.fastq.gz
+HIB_URC_223,HIB_URC_223_1.fastq.gz,HIB_URC_223_2.fastq.gz
+HIB_URC_726B,HIB_URC_726B_1.fastq.gz,HIB_URC_726B_2.fastq.gz
+HIB_URC_734A,HIB_URC_734A_1.fastq.gz,HIB_URC_734A_2.fastq.gz
+HIB_URC_734D,HIB_URC_734D_1.fastq.gz,HIB_URC_734D_2.fastq.gz
+HIB_URC_736,HIB_URC_736_1.fastq.gz,HIB_URC_736_2.fastq.gz
+HIB_URC_728,HIB_URC_728_1.fastq.gz,HIB_URC_728_2.fastq.gz
+STA_015,STA_015_1.fastq.gz,STA_015_2.fastq.gz
+STA_CHA749A,STA_CHA749A_1.fastq.gz,STA_CHA749A_2.fastq.gz
+STA_CHA_749C,STA_CHA_749C_1.fastq.gz,STA_CHA_749C_2.fastq.gz
+STA_CHA_749F,STA_CHA_749F_1.fastq.gz,STA_CHA_749F_2.fastq.gz
+STA_CHA_749G,STA_CHA_749G_1.fastq.gz,STA_CHA_749G_2.fastq.gz
+STA_CHA_749I,STA_CHA_749I_1.fastq.gz,STA_CHA_749I_2.fastq.gz
+STA_ITA2_689,STA_ITA2_689_1.fastq.gz,STA_ITA2_689_2.fastq.gz
+STA_ITA_688,STA_ITA_688_1.fastq.gz,STA_ITA_688_2.fastq.gz
+STA_ITA_689,STA_ITA_689_1.fastq.gz,STA_ITA_689_2.fastq.gz
+STA_ITA_691A,STA_ITA_691A_1.fastq.gz,STA_ITA_691A_2.fastq.gz
+STA_ITA_691A2,STA_ITA_691A2_1.fastq.gz,STA_ITA_691A2_2.fastq.gz
+STA_ITA696,STA_ITA696_1.fastq.gz,STA_ITA696_2.fastq.gz
+STA_ITA_698,STA_ITA_698_1.fastq.gz,STA_ITA_698_2.fastq.gz
+STA_ITA_699C,STA_ITA_699C_1.fastq.gz,STA_ITA_699C_2.fastq.gz
+STA_ITA_703A,STA_ITA_703A_1.fastq.gz,STA_ITA_703A_2.fastq.gz
 
-#!/bin/bash
-#$ -q all.q                     # Especifica a fila
-#$ -cwd                         # Executa no diretório atual
-#$ -V                           # Exporta variáveis de ambiente
-#$ -pe smp 15                   # Aloca 15 CPUs
 
-# Carregar módulos necessários (bwa e bowtie2, ajuste de acordo com seu ambiente)
-module load bwa/0.7.17
-module load Bowtie2/2.4.1
-
-# Caminhos para os arquivos FASTA e diretórios de índice
-HAP1_FASTA="/Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final.fa"
-HAP2_FASTA="/Storage/data2/drielli.canal/yahs.PITALB_v0.2.hap2.pugedups_scaffolds_final.fa"
-
-BWA_INDEX_DIR="/Storage/data2/drielli.canal/indices"
-BOWTIE2_INDEX_DIR="/Storage/data2/drielli.canal/indices"
-
-# Criar diretórios de índice se não existirem
-mkdir -p $BWA_INDEX_DIR
-mkdir -p $BOWTIE2_INDEX_DIR
-
-# Indexação com BWA para a haplofase 1
-echo "Indexando haplofase 1 com BWA..."
-bwa index $HAP1_FASTA
-
-# Indexação com BWA para a haplofase 2
-echo "Indexando haplofase 2 com BWA..."
-bwa index $HAP2_FASTA
-
-# Indexação com Bowtie2 para a haplofase 1
-echo "Indexando haplofase 1 com Bowtie2..."
-bowtie2-build $HAP1_FASTA $BOWTIE2_INDEX_DIR/hap1_bowtie2_index
-
-# Indexação com Bowtie2 para a haplofase 2
-echo "Indexando haplofase 2 com Bowtie2..."
-bowtie2-build $HAP2_FASTA $BOWTIE2_INDEX_DIR/hap2_bowtie2_index
-
-echo "Indexação concluída."
-
-_________________________________________________________________________________________
-
-#!/bin/bash
-
-#$ -q all.q               # Submete para a fila 'all.q'
-#$ -cwd                   # Executa no diretório atual
-#$ -V                     # Exporta todas as variáveis de ambiente
-#$ -pe smp 15             # Usa 15 CPUs
-#$ -N methylseq_run        # Nome do job
-#$ -o methylseq_output_hap1.log # Arquivo de saída
-#$ -e methylseq_error_hap1.log  # Arquivo de erro
-
-# Carrega o módulo do Nextflow e Singularity
-module load nextflow
-module load singularity-ce/3.11.2
-
-# Configurar o cache do Singularity
-export NXF_SINGULARITY_CACHEDIR="/Storage/data2/drielli.canal/work/singularity"
-
-# Rodando o pipeline nf-core/methylseq com os parâmetros e genomas de haplofase 1 e 2
-nextflow run nf-core/methylseq \
-  --input /Storage/data2/drielli.canal/samplesheet.csv \
-  --outdir ./results_hap1/ \
-  --fasta /Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final.fa \
-  --bwa_index /Storage/data2/drielli.canal/yahs.PITSTA_v0.2.hap1.pugedups_scaffolds_final \
-  --bowtie2_index /Storage/data2/drielli.canal/indices/hap1_bowtie2_index \
-  --bismark_index /Storage/data2/drielli.canal/bismark_index \
-  --max_memory '60 GB' \
-  --max_cpus 15 \
-  -profile singularity
 
 
 
