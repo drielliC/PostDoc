@@ -1,0 +1,91 @@
+install.packages("BiocManager")
+BiocManager::install("methylKit")
+
+library(methylKit)
+
+
+
+1. Importando os Dados
+
+O methylKit trabalha com dados de metilação de bisulfito, geralmente em arquivos .txt ou .csv. 
+Esses arquivos contêm informações sobre os locais de CpG e as porcentagens de metilação para cada posição. 
+Você pode carregar os dados com o comando read do methylKit, configurando o tipo de amostra e se é uma análise de CpGs, CHGs ou CHHs.
+
+Por exemplo:
+
+r
+
+file.list <- list("sample1.txt", "sample2.txt", "sample3.txt", "sample4.txt")
+myobj <- methRead(file.list, 
+                  sample.id = list("control1", "control2", "treated1", "treated2"),
+                  assembly = "hg19",
+                  treatment = c(0, 0, 1, 1), # 0 = controle, 1 = tratado
+                  context = "CpG")
+
+
+
+2. Filtragem de Dados
+
+Após a importação, a filtragem de locais com baixa cobertura é essencial para remover ruídos. Use a função filterByCoverage para definir um limite mínimo e máximo de cobertura:
+
+r
+
+myobj.filtered <- filterByCoverage(myobj, lo.count = 10, hi.perc = 99.9)
+
+3. Normalização
+
+A normalização ajuda a corrigir variações entre as amostras. Use a função normalizeCoverage para este processo:
+
+r
+
+myobj.norm <- normalizeCoverage(myobj.filtered)
+
+4. Unindo as Amostras
+
+Para comparar metilação diferencial entre grupos (controle vs tratado), é necessário unir os dados:
+
+r
+
+meth <- unite(myobj.norm, destrand = TRUE)
+
+5. Análise de Metilação Diferencial
+
+A análise diferencial de metilação identifica regiões de CpG com diferenças significativas de metilação entre os grupos de controle e tratado. A função calculateDiffMeth executa esta análise:
+
+r
+
+myDiff <- calculateDiffMeth(meth, covariates = NULL)
+
+6. Selecionando as Regiões Diferencialmente Metiladas (DMRs)
+
+Para selecionar as regiões diferencialmente metiladas (DMRs) com um nível de significância específico, use a função getMethylDiff:
+
+r
+
+myDiffSig <- getMethylDiff(myDiff, difference = 25, qvalue = 0.01) # diferença mínima de 25%, q-valor < 0.01
+
+7. Visualização
+
+O methylKit permite criar gráficos para visualizar a distribuição de metilação. Por exemplo, para um histograma da cobertura de CpGs:
+
+r
+
+getCoverageStats(myobj, plot = TRUE)
+
+Para visualizar DMRs:
+
+r
+
+library(ggplot2)
+ggplot(myDiffSig, aes(x=chr, y=meth.diff)) +
+    geom_point() +
+    theme_minimal() +
+    labs(title="DMRs entre Tratado e Controle", x="Cromossomo", y="Diferença de Metilação")
+
+8. Exportando Resultados
+
+É possível exportar os resultados para um arquivo .csv com:
+
+r
+
+write.csv(myDiffSig, "DMRs_significativas.csv")
