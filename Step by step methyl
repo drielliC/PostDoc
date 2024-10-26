@@ -1,0 +1,97 @@
+conda create -n bismark_env python=3.9
+conda activate bismark_env
+
+#Preparar o Genoma de Referência: Use o comando bismark_genome_preparation para preparar o genoma de referência, o que é necessário fazer apenas uma vez.
+bismark_genome_preparation /caminho/para/o/genoma/
+______________________________________
+#Step 1. FastQC e MultiQc
+
+nano run_quality_check.sh
+
+#!/bin/bash
+
+# Caminhos dos diretórios de entrada e saída
+FASTQ_DIR="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl"
+FASTQC_OUTPUT="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/fastqc"
+MULTIQC_OUTPUT="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/multiqc"
+
+# Criar diretórios de saída, se não existirem
+mkdir -p "$FASTQC_OUTPUT"
+mkdir -p "$MULTIQC_OUTPUT"
+
+# Executar FastQC em todos os arquivos .fastq.gz
+echo "Iniciando análise de qualidade com FastQC..."
+for file in "$FASTQ_DIR"/*.fastq.gz; do
+    echo "Analisando ${file} com FastQC..."
+    fastqc -q -o "$FASTQC_OUTPUT" "${file}"
+done
+
+# Executar MultiQC para agregar todos os relatórios FastQC
+echo "Agregando relatórios com MultiQC..."
+multiqc -f -p "$FASTQC_OUTPUT" -o "$MULTIQC_OUTPUT"
+
+echo "Análise de qualidade concluída. Relatório MultiQC disponível em ${MULTIQC_OUTPUT}/multiqc_report.html"
+
+______________________________________________________________________________________
+Step 2. Trim the adapters and low quality sequence reads
+
+Adapter sequences should be removed from reads because they interfere with downstream analyses, such as alignment of reads to a reference.
+In the FastQC report, the adapter content plot shows the percentage of reads (y-axis), which has an adapter starting at a particular position along a read (x-axis). 
+And if the reads were fragmentaed to lower than than the target molecule length, high propotion of reads with adapters will be observed (right).
+
+#!/bin/bash
+
+# Caminhos dos diretórios de entrada e saída
+FASTQ_DIR="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl"
+TRIMMED_OUTPUT="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/trimmed"
+mkdir -p "$TRIMMED_OUTPUT"
+
+# Executar Trim Galore em todos os arquivos de leitura pareados
+echo "Iniciando a trimagem com Trim Galore..."
+for file1 in "$FASTQ_DIR"/*_1.fastq.gz; do
+    # Identifica o arquivo de leitura pareado R2
+    file2="${file1/_1.fastq.gz/_2.fastq.gz}"
+
+    # Verifica se o arquivo R2 correspondente existe
+    if [[ -f "$file2" ]]; then
+        echo "Processando pares: $file1 e $file2 com Trim Galore..."
+
+        # Executa o Trim Galore com 4 threads, modo pareado, com FastQC
+        trim_galore -j 4 --paired --illumina -o "$TRIMMED_OUTPUT" --fastqc "$file1" "$file2"
+    else
+        echo "Par não encontrado para $file1"
+    fi
+done
+
+echo "Processo de trimagem concluído. Arquivos trimados e relatórios FastQC estão em $TRIMMED_OUTPUT."
+
+__________________________________________________________________________________________________
+# Run Bismark (alignment)
+#In this step, the quality and adapter trimmed reads will be mapped to the bisulfite converted reference genome using command bismark. 
+
+nano run_bismark_alignment.sh
+
+#!/bin/bash
+# Caminhos dos diretórios
+TRIMMED_DIR="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/trimmed"
+GENOME_DIR="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/reference_genome"
+BISMARK_OUTPUT="/home/andreiat/Documents/alunos/driii/dataUNICAMP/methyl/bismark"
+mkdir -p "$BISMARK_OUTPUT"
+# Loop pelos arquivos R1 para fazer o alinhamento com Bismark
+echo "Iniciando o alinhamento com Bismark..."
+for file_name in "$TRIMMED_DIR"/*_R1_val_1.fq.gz; do
+    # Localiza o arquivo de leitura pareado R2
+    file_name_R2="${file_name//_R1_val_1/_R2_val_2}"
+    # Verifica se o arquivo R2 existe
+    if [[ -f "$file_name_R2" ]]; then
+        echo "Alinhando pares: $file_name e $file_name_R2..."
+        # Executa o alinhamento com Bismark
+        bismark --genome "$GENOME_DIR" -1 "$file_name" -2 "$file_name_R2" -o "$BISMARK_OUTPUT"
+    else
+        echo "Par não encontrado para $file_name"
+    fi
+done
+
+echo "Alinhamento com Bismark concluído. Resultados estão em $BISMARK_OUTPUT."
+
+______________________________________________________
