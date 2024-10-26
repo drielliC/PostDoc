@@ -1,0 +1,27 @@
+#PREPARO DO GENOMA
+
+
+#!/bin/bash
+#$ -q all.q                          # Especifica a fila
+#$ -cwd                              # Executa no diretório atual
+#$ -V                                # Exporta variáveis de ambiente
+#$ -pe smp 15                        # Aloca 15 CPUs (ajuste conforme necessário)
+#$ -N bismark_prep                   # Nome da tarefa
+#$ -o bismark_prep.out               # Redireciona a saída padrão para este arquivo
+#$ -e bismark_prep.err               # Redireciona a saída de erro para este arquivo
+
+# Ajustar configurações de localidade para evitar warnings do Perl
+export LC_ALL=C
+export LANG=C
+
+# Carregar o módulo Singularity, se necessário
+module load singularity-ce/3.11.2
+
+# Diretório do genoma e contêiner Bismark
+GENOME_DIR="/Storage/data2/drielli.canal/reference_genome"
+CONTAINER="/Storage/data2/drielli.canal/bismark_latest.sif"
+
+# Executar o comando de preparação do genoma com montagem explícita
+singularity exec --bind $GENOME_DIR:/mnt/genome $CONTAINER bismark_genome_preparation /mnt/genome
+
+
