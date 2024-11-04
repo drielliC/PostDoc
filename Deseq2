@@ -1,0 +1,334 @@
+andreiat@ppgbm1:~/Documents/alunos/driii/dataUNICAMP$ ./featurecount.sh
+
+        ==========     _____ _    _ ____  _____  ______          _____
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+          v2.0.3
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 41 BAM files                                     ||
+||                                                                            ||
+||                           C12-35_Aligned.sortedByCoord.out.bam             ||
+||                           C12-36_Aligned.sortedByCoord.out.bam             ||
+||                           C12-38_Aligned.sortedByCoord.out.bam             ||
+||                           C12-39_Aligned.sortedByCoord.out.bam             ||
+||                           C12-42_Aligned.sortedByCoord.out.bam             ||
+||                           C1-45_Aligned.sortedByCoord.out.bam              ||
+||                           C1-47_Aligned.sortedByCoord.out.bam              ||
+||                           C1-49_Aligned.sortedByCoord.out.bam              ||
+||                           C1-50_Aligned.sortedByCoord.out.bam              ||
+||                           C1-51_Aligned.sortedByCoord.out.bam              ||
+||                           C1-52_Aligned.sortedByCoord.out.bam              ||
+||                           C1-54_Aligned.sortedByCoord.out.bam              ||
+||                           C1-55_Aligned.sortedByCoord.out.bam              ||
+||                           C2-62_Aligned.sortedByCoord.out.bam              ||
+||                           C2-63_Aligned.sortedByCoord.out.bam              ||
+||                           C2-69_Aligned.sortedByCoord.out.bam              ||
+||                           C2-72_Aligned.sortedByCoord.out.bam              ||
+||                           C3-77_Aligned.sortedByCoord.out.bam              ||
+||                           C3-78_Aligned.sortedByCoord.out.bam              ||
+||                           C3-80_Aligned.sortedByCoord.out.bam              ||
+||                           C3-82_Aligned.sortedByCoord.out.bam              ||
+||                           C3-83_Aligned.sortedByCoord.out.bam              ||
+||                           C3-84_Aligned.sortedByCoord.out.bam              ||
+||                           C3-86_Aligned.sortedByCoord.out.bam              ||
+||                           C3-88_Aligned.sortedByCoord.out.bam              ||
+||                           C6-18_Aligned.sortedByCoord.out.bam              ||
+||                           C6-19_Aligned.sortedByCoord.out.bam              ||
+||                           C6-23_Aligned.sortedByCoord.out.bam              ||
+||                           C6-26_Aligned.sortedByCoord.out.bam              ||
+||                           C6-28_Aligned.sortedByCoord.out.bam              ||
+||                           C6-30_Aligned.sortedByCoord.out.bam              ||
+||                           C9-03_Aligned.sortedByCoord.out.bam              ||
+||                           C9-04_Aligned.sortedByCoord.out.bam              ||
+||                           C9-05_Aligned.sortedByCoord.out.bam              ||
+||                           C9-06_Aligned.sortedByCoord.out.bam              ||
+||                           C9-12_Aligned.sortedByCoord.out.bam              ||
+||                           C9-13_Aligned.sortedByCoord.out.bam              ||
+||                           C9-14_Aligned.sortedByCoord.out.bam              ||
+||                           C9-15_Aligned.sortedByCoord.out.bam              ||
+||                           C9-16_Aligned.sortedByCoord.out.bam              ||
+||                           C9-17_Aligned.sortedByCoord.out.bam              ||
+||                                                                            ||
+||             Output file : RNAtestcountsGene.txt                            ||
+||                 Summary : RNAtestcountsGene.txt.summary                    ||
+||              Paired-end : yes                                              ||
+||        Count read pairs : yes                                              ||
+||              Annotation : ISC_3.singularity.EVM.gtf (GTF)                  ||
+||      Dir for temp files : ./                                               ||
+||                                                                            ||
+||                 Threads : 5                                                ||
+||                   Level : meta-feature level                               ||
+||      Multimapping reads : not counted                                      ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file ISC_3.singularity.EVM.gtf ...                         ||
+||    Features : 137135                                                       ||
+||    Meta-features : 25603                                                   ||
+||    Chromosomes/contigs : 49                                                ||
+||                                                                            ||
+|| Load FASTA contigs from ISCPUB_v0.2.h1_scaffolds.yahs_final_mod.fa...      ||
+||    80 contigs were loaded                                                  ||
+||                                                                            ||
+|| Process BAM file C12-35_Aligned.sortedByCoord.out.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 4669264                                              ||
+||    Successfully assigned alignments : 2948504 (63.1%)                      ||
+||    Running time : 0.06 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C12-36_Aligned.sortedByCoord.out.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 20689327                                             ||
+||    Successfully assigned alignments : 16716727 (80.8%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C12-38_Aligned.sortedByCoord.out.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 9333256                                              ||
+||    Successfully assigned alignments : 5580729 (59.8%)                      ||
+||    Running time : 0.14 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C12-39_Aligned.sortedByCoord.out.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21966312                                             ||
+||    Successfully assigned alignments : 17399175 (79.2%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C12-42_Aligned.sortedByCoord.out.bam...                   ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 18543039                                             ||
+||    Successfully assigned alignments : 15361841 (82.8%)                     ||
+||    Running time : 0.23 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-45_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 20447971                                             ||
+||    Successfully assigned alignments : 17371898 (85.0%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-47_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22552908                                             ||
+||    Successfully assigned alignments : 19667797 (87.2%)                     ||
+||    Running time : 0.30 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-49_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21740306                                             ||
+||    Successfully assigned alignments : 18668577 (85.9%)                     ||
+||    Running time : 0.29 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-50_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 11152868                                             ||
+||    Successfully assigned alignments : 9211923 (82.6%)                      ||
+||    Running time : 0.15 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-51_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 24452352                                             ||
+||    Successfully assigned alignments : 20744625 (84.8%)                     ||
+||    Running time : 0.32 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-52_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17731937                                             ||
+||    Successfully assigned alignments : 14405781 (81.2%)                     ||
+||    Running time : 0.23 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-54_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19769835                                             ||
+||    Successfully assigned alignments : 17005686 (86.0%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C1-55_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 20730720                                             ||
+||    Successfully assigned alignments : 17907753 (86.4%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C2-62_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21251195                                             ||
+||    Successfully assigned alignments : 16114945 (75.8%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C2-63_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 16646395                                             ||
+||    Successfully assigned alignments : 12644109 (76.0%)                     ||
+||    Running time : 0.18 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C2-69_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21829216                                             ||
+||    Successfully assigned alignments : 18272443 (83.7%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C2-72_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 18244352                                             ||
+||    Successfully assigned alignments : 14784805 (81.0%)                     ||
+||    Running time : 0.22 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-77_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 23524401                                             ||
+||    Successfully assigned alignments : 19224655 (81.7%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-78_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19389054                                             ||
+||    Successfully assigned alignments : 15973776 (82.4%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-80_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22934541                                             ||
+||    Successfully assigned alignments : 18666725 (81.4%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-82_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 14719603                                             ||
+||    Successfully assigned alignments : 12594555 (85.6%)                     ||
+||    Running time : 0.18 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-83_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 23267261                                             ||
+||    Successfully assigned alignments : 19519964 (83.9%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-84_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 10554495                                             ||
+||    Successfully assigned alignments : 8456628 (80.1%)                      ||
+||    Running time : 0.13 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-86_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19645880                                             ||
+||    Successfully assigned alignments : 16899884 (86.0%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C3-88_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 14140440                                             ||
+||    Successfully assigned alignments : 9634901 (68.1%)                      ||
+||    Running time : 0.16 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-18_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 29191170                                             ||
+||    Successfully assigned alignments : 24074203 (82.5%)                     ||
+||    Running time : 0.38 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-19_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 24369195                                             ||
+||    Successfully assigned alignments : 20933352 (85.9%)                     ||
+||    Running time : 0.30 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-23_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22261256                                             ||
+||    Successfully assigned alignments : 19002432 (85.4%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-26_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21118181                                             ||
+||    Successfully assigned alignments : 16569154 (78.5%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-28_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 29658013                                             ||
+||    Successfully assigned alignments : 25756197 (86.8%)                     ||
+||    Running time : 0.40 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C6-30_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22825086                                             ||
+||    Successfully assigned alignments : 19550043 (85.7%)                     ||
+||    Running time : 0.32 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-03_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22386754                                             ||
+||    Successfully assigned alignments : 19130537 (85.5%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-04_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27088617                                             ||
+||    Successfully assigned alignments : 21674972 (80.0%)                     ||
+||    Running time : 0.31 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-05_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22571901                                             ||
+||    Successfully assigned alignments : 18572484 (82.3%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-06_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 22509367                                             ||
+||    Successfully assigned alignments : 18773677 (83.4%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-12_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17655565                                             ||
+||    Successfully assigned alignments : 14440718 (81.8%)                     ||
+||    Running time : 0.21 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-13_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17149762                                             ||
+||    Successfully assigned alignments : 14528297 (84.7%)                     ||
+||    Running time : 0.21 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-14_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 24603724                                             ||
+||    Successfully assigned alignments : 20313793 (82.6%)                     ||
+||    Running time : 0.29 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-15_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19877954                                             ||
+||    Successfully assigned alignments : 16515344 (83.1%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-16_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21046266                                             ||
+||    Successfully assigned alignments : 17857135 (84.8%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file C9-17_Aligned.sortedByCoord.out.bam...                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19737879                                             ||
+||    Successfully assigned alignments : 16793422 (85.1%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+|| Summary of counting results can be found in file "RNAtestcountsGene.txt.s  ||
+|| ummary"                                                                    ||
+||                                                                            ||
+\\============================================================================//
