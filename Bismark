@@ -6,23 +6,18 @@ _____________________
 #2. Quality trimming and QC with FASTP
 
 #!/bin/bash
-
 # Definição de diretórios
 INPUT_DIR="/mnt/pesquisa/DBV/LAB-EEGP/Clarisse_Palma/Download04062024/"
 OUTPUT_DIR="$HOME/Pitcairnia/trimmed_reads2"
 mkdir -p "$OUTPUT_DIR"
-
 # Número de threads
 N_CORES=4
-
 # Loop para processar todos os pares de reads
 for sample in $(ls $INPUT_DIR | grep "_1.fastq.gz" | sed 's/_1.fastq.gz//'); do
     READ1="${INPUT_DIR}${sample}_1.fastq.gz"
     READ2="${INPUT_DIR}${sample}_2.fastq.gz"
     PREFIX="${OUTPUT_DIR}/${sample}"
-
     echo "Processando ${sample}..."
-
     fastp --thread $N_CORES \
           --in1 $READ1 --out1 ${PREFIX}_1.trimmed.fastq.gz \
           --in2 $READ2 --out2 ${PREFIX}_2.trimmed.fastq.gz \
@@ -35,36 +30,69 @@ for sample in $(ls $INPUT_DIR | grep "_1.fastq.gz" | sed 's/_1.fastq.gz//'); do
 
     echo "Concluído: ${sample}"
 done
-
 echo "Todos os arquivos foram processados."
-
 _______________________
-#3. Indexing the genome and aligning reads with Bismark
+#3. Indexing the genome
 # Ajustar configurações de localidade para evitar warnings do Perl
 export LC_ALL=C
 export LANG=C
-
 # Carregar o módulo Singularity, se necessário
 module load singularity-ce/3.11.2
-
 # Diretório do genoma e contêiner Bismark
 GENOME_DIR="/home/dcanal/reference_genome"
 CONTAINER="/home/dcanal/SIF/bismark_v0.21.0.sif"
-
 # Executar o comando de preparação do genoma com montagem explícita
 singularity exec --bind $GENOME_DIR:/mnt/genome $CONTAINER bismark_genome_preparation /mnt/genome
-
 ________________________
-# 1. Examining the Bisulfite / Enzymatic conversion rate
+#4 . Examining the Bisulfite / Enzymatic conversion rate
 #Lambda is unmethylated so acts as a negative control to understand how efficent the bisulfite converstion is. 
 #For EM-Seq both a lambda (negative control) and pUC19 (plasmid positive control - fully methylated) are used
 
+INDEX=~/Pitcairnia/Lambda
+READ1=~/Pitcairnia/trimmed_reads2/CHA_750_1.trimmed.fastq.gz
+READ2=~/Pitcairnia/trimmed_reads2/CHA_750_2.trimmed.fastq.gz
+PREFIX=CHA_750_LAMB
+OUTPUT_DIR=~/Pitcairnia/bismark_output_lambda
+CONTAINER=/home/dcanal/SIF/bismark_v0.21.0.sif  # Caminho do contêiner Singularity
+# Criar diretório de saída, se não existir
+mkdir -p "$OUTPUT_DIR"
+ singularity exec "$CONTAINER" bismark --prefix $PREFIX -p $N_CORES --bam $INDEX -1 $READ1 -2 $READ2 --output_dir "$OUTPUT_DIR"
+_______________________________________
+#5. Aligning reads with Bismark
+N_CORES=4
+INDEX=~/Pitcairnia/Lambda
+READ1=~/Pitcairnia/trimmed_reads2/CHA_750_1.trimmed.fastq.gz
+READ2=~/Pitcairnia/trimmed_reads2/CHA_750_2.trimmed.fastq.gz
+PREFIX=CHA_750_LAMB
+OUTPUT_DIR=~/Pitcairnia/bismark_output_lambda
+CONTAINER=/home/dcanal/SIF/bismark_v0.21.0.sif  # Caminho do contêiner Singularity
 
+# Criar diretório de saída, se não existir
+mkdir -p "$OUTPUT_DIR"
+ singularity exec "$CONTAINER" bismark --prefix $PREFIX -p $N_CORES --bam $INDEX -1 $READ1 -2 $READ2 --output_dir "$OUTPUT_DIR"
+_______________________________________
+#6. Remove PCR duplicates from BAM file
+deduplicate_bismark --bam --outfile Col0_align_TAIR10 Col0_align_TAIR10.Col0_subsample.trimmed_bismark_bt2.bam
+# add --paired if data were paired-end.
+#!/bin/bash
 
-#2. Extracting Useable Methylation Counts
-#After creating .bam files by aligning the sequencing data to the species reference genome, we must now convert these files into useable dataframes of methylation information. 
-bismark_methylation_extractor --multicore 3 --comprehensive --bedGraph --report --cytosine_report \
---genome_folder TAIR10_genome/ <your_deduplicated>.bam
+# Definir diretórios
+dir="~/Pitcairnia/bismark_output_MCS"
+output_dir="~/Pitcairnia/bismark_output_MCS/deduplicated_bismark"
+container="/home/dcanal/SIF/bismark_v0.21.0.sif"
+# Criar diretório de saída se não existir
+mkdir -p $output_dir
+# Navegar até o diretório de entrada
+eval cd $dir
+# Loop para processar todos os arquivos *trimmed_bismark_bt2_pe.bam
+for bam_file in *.trimmed_bismark_bt2_pe.bam; do
+    # Extrair o nome base do arquivo
+    base_name="${bam_file%.trimmed_bismark_bt2_pe.bam}"
+        # Rodar o comando deduplicate_bismark dentro do contêiner Singularity
+    echo "Processando $bam_file..."
+    singularity exec $container deduplicate_bismark --bam --paired --outfile "$output_dir/${base_name}_deduplicated" "$bam_file"
+    
+    echo "Finalizado: $output_dir/${base_name}_deduplicated.bam"
+done
 
-bismark2report ./
-
+echo "Processo concluído para todos os arquivos!"
