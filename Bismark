@@ -1,9 +1,10 @@
 #DNA Methylation
 #Short-reads workflow
-_____________________
+# ---------------------------------------------------------
 #1. Obtain raw reads and subsample
-_____________________
-#2. Quality trimming and QC with FASTP
+# ---------------------------------------------------------
+# 1a. Quality checking and adapter trimming
+# ---------------------------------------------------------
 
 #!/bin/bash
 # Definição de diretórios
@@ -31,20 +32,35 @@ for sample in $(ls $INPUT_DIR | grep "_1.fastq.gz" | sed 's/_1.fastq.gz//'); do
     echo "Concluído: ${sample}"
 done
 echo "Todos os arquivos foram processados."
-_______________________
-#3. Indexing the genome
-# Ajustar configurações de localidade para evitar warnings do Perl
-export LC_ALL=C
+# ---------------------------------------------------------
+# 2. Indexing and Alignment to the reference genome
+# ---------------------------------------------------------
+# Adjust locale settings to avoid Perl warningsexport LC_ALL=C
 export LANG=C
-# Carregar o módulo Singularity, se necessário
+# Load the Singularity module if necessary
 module load singularity-ce/3.11.2
-# Diretório do genoma e contêiner Bismark
+# Genome directory and Bismark container
 GENOME_DIR="/home/dcanal/reference_genome"
 CONTAINER="/home/dcanal/SIF/bismark_v0.21.0.sif"
-# Executar o comando de preparação do genoma com montagem explícita
+# Run the genome preparation command with explicit assembly
 singularity exec --bind $GENOME_DIR:/mnt/genome $CONTAINER bismark_genome_preparation /mnt/genome
-________________________
-#4 . Examining the Bisulfite / Enzymatic conversion rate
+
+________________
+N_CORES=4
+INDEX=~/Pitcairnia/Lambda
+READ1=~/Pitcairnia/trimmed_reads2/CHA_750_1.trimmed.fastq.gz
+READ2=~/Pitcairnia/trimmed_reads2/CHA_750_2.trimmed.fastq.gz
+PREFIX=CHA_750_LAMB
+OUTPUT_DIR=~/Pitcairnia/bismark_output_lambda
+CONTAINER=/home/dcanal/SIF/bismark_v0.21.0.sif  # Caminho do contêiner Singularity
+
+# Criate output dir if does not exist
+mkdir -p "$OUTPUT_DIR"
+ singularity exec "$CONTAINER" bismark --prefix $PREFIX -p $N_CORES --bam $INDEX -1 $READ1 -2 $READ2 --output_dir "$OUTPUT_DIR"
+
+# ---------------------------------------------------------
+# 3. Conversion efficency:
+# ---------------------------------------------------------
 #Lambda is unmethylated so acts as a negative control to understand how efficent the bisulfite converstion is. 
 #For EM-Seq both a lambda (negative control) and pUC19 (plasmid positive control - fully methylated) are used
 
@@ -57,42 +73,66 @@ CONTAINER=/home/dcanal/SIF/bismark_v0.21.0.sif  # Caminho do contêiner Singular
 # Criar diretório de saída, se não existir
 mkdir -p "$OUTPUT_DIR"
  singularity exec "$CONTAINER" bismark --prefix $PREFIX -p $N_CORES --bam $INDEX -1 $READ1 -2 $READ2 --output_dir "$OUTPUT_DIR"
-_______________________________________
-#5. Aligning reads with Bismark
-N_CORES=4
-INDEX=~/Pitcairnia/Lambda
-READ1=~/Pitcairnia/trimmed_reads2/CHA_750_1.trimmed.fastq.gz
-READ2=~/Pitcairnia/trimmed_reads2/CHA_750_2.trimmed.fastq.gz
-PREFIX=CHA_750_LAMB
-OUTPUT_DIR=~/Pitcairnia/bismark_output_lambda
-CONTAINER=/home/dcanal/SIF/bismark_v0.21.0.sif  # Caminho do contêiner Singularity
 
-# Criar diretório de saída, se não existir
-mkdir -p "$OUTPUT_DIR"
- singularity exec "$CONTAINER" bismark --prefix $PREFIX -p $N_CORES --bam $INDEX -1 $READ1 -2 $READ2 --output_dir "$OUTPUT_DIR"
-_______________________________________
-#6. Remove PCR duplicates from BAM file
-deduplicate_bismark --bam --outfile Col0_align_TAIR10 Col0_align_TAIR10.Col0_subsample.trimmed_bismark_bt2.bam
-# add --paired if data were paired-end.
+# ---------------------------------------------------------
+#4. Remove PCR duplicates from BAM file
+# ---------------------------------------------------------
 #!/bin/bash
 
 # Definir diretórios
-dir="~/Pitcairnia/bismark_output_MCS"
-output_dir="~/Pitcairnia/bismark_output_MCS/deduplicated_bismark"
+dir="~/Pitcairnia/bismark_output_all"
+output_dir="/home/dcanal/Pitcairnia/deduplicate"
 container="/home/dcanal/SIF/bismark_v0.21.0.sif"
+
 # Criar diretório de saída se não existir
 mkdir -p $output_dir
+
 # Navegar até o diretório de entrada
 eval cd $dir
+
 # Loop para processar todos os arquivos *trimmed_bismark_bt2_pe.bam
 for bam_file in *.trimmed_bismark_bt2_pe.bam; do
     # Extrair o nome base do arquivo
     base_name="${bam_file%.trimmed_bismark_bt2_pe.bam}"
-        # Rodar o comando deduplicate_bismark dentro do contêiner Singularity
+
+    # Rodar o comando deduplicate_bismark dentro do contêiner Singularity
     echo "Processando $bam_file..."
     singularity exec $container deduplicate_bismark --bam --paired --outfile "$output_dir/${base_name}_deduplicated" "$bam_file"
-    
+
     echo "Finalizado: $output_dir/${base_name}_deduplicated.bam"
 done
 
-echo "Processo concluído para todos os arquivos!"
+
+# add --paired if data were paired-end.
+
+# ---------------------------------------------------------
+# 5. Methylation extraction
+# --------------------------------------------------------- 
+
+#!/bin/bash
+
+singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif bismark_methylation_extractor --multicore 3 --comprehensive --bedGraph --report --cytosine_report \
+        --genome_folder ~/Pitcairnia/reference_genome --output ~/Pitcairnia/extraction/ ~/Pitcairnia/bismark_output_all/deduplicated/CHA_749F_deduplicated.bam
+singularity exec  /home/dcanal/SIF/bismark_v0.21.0.sif bismark2report --dir ~/Pitcairnia/extraction/
+
+
+# ---------------------------------------------------------
+#  Optional: merge strands
+# --------------------------------------------------------- 
+
+coverage2cytosine -o Col0 --merge_CpGs --genome_folder ./TAIR10_genome/ Col0_subsample.trimmed.fastq_bismark_bt2.bam
+
+# ---------------------------------------------------------
+# 2c. Optional: Accounting for SNPs
+# ---------------------------------------------------------
+
+# Copy the SNP files for your chosen strain from the /Shared/ area to your area
+cp ~/Shared/2_Tuesday/SNP_calls/Col-0.g.vcf.gz ./
+
+# Get the C/T and G/A SNPs we want to filter from a vcf
+zcat Col-0.g.vcf.gz | grep -v "#" | awk '$4=="C"&&$5=="T,<NON_REF>"' | cut -f1,2 > Col-0_SNPs_CtoT.txt
+zcat Col-0.g.vcf.gz | grep -v "#" | awk '$4=="G"&&$5=="A,<NON_REF>"' | cut -f1,2 > Col-0_SNPs_GtoA.txt
+
+# Run the filtering script provided - coverage files end in .cov or .cov.gz
+bash filter_SNPs_from_covfile.sh <your_coverage_file> Col-0_SNPs_CtoT.txt
+bash filter_SNPs_from_covfile.sh <output_from_command_above> Col-0_SNPs_GtoA.txt
