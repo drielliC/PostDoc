@@ -120,7 +120,10 @@ singularity exec  /home/dcanal/SIF/bismark_v0.21.0.sif bismark2report --dir ~/Pi
 #  Optional: merge strands
 # --------------------------------------------------------- 
 
-coverage2cytosine -o Col0 --merge_CpGs --genome_folder ./TAIR10_genome/ Col0_subsample.trimmed.fastq_bismark_bt2.bam
+singularity exec ../../../SIF/bismark_v0.21.0.sif coverage2cytosine -o CHA_750 --merge_CpGs --genome_folder ../../reference_genome/ CHA_750_align.deduplicated.bismark.cov.gz 
+
+#or use .bam
+
 
 # ---------------------------------------------------------
 # 2c. Optional: Accounting for SNPs
