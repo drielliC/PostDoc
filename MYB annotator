@@ -1,18 +1,17 @@
-# Installation via conda
+#Instalar via conda
 git clone https://github.com/bpucker/MYB_annotator
 cd MYB_annotator
 
-# criar ambiente conda
+#Criar ambiente conda
 conda env create -f environment.yml
 
-#ativar o ambiente conda
+#Ativar o ambiente conda
 conda activate mybannotator
 
-Usage
+#Uso
 python3 MYB_annotator.py --baits MYB_baits.fast --info MYB_baits.txt --out resultado Pflamea_test --subject /home/dcanal/Pflammea/proteome/RANCOL-Annotation-HQ.prot
 
---baits:
-Este argumento especifica o caminho para um arquivo que contém as sequências de "iscas" (baits) que você deseja usar para anotação.
+--baits: Este argumento especifica o caminho para um arquivo que contém as sequências de "iscas" (baits) que você deseja usar para anotação.
 
 --info specifies a text file that contains a table with all MYB IDs (matching the baits FASTA file) in the first column.
 Columns are TAB-separted. 
@@ -29,3 +28,6 @@ AT1G71030	out
 AT2G38600	out
 AT2G43445	out
 AT2G43440	out
+
+ --out nome do arquivo de output
+--subject caminho e arquivo de proteina do seu genoma
