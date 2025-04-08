@@ -377,4 +377,84 @@ ________________________________________________________________________________
 cat run_trimming.sh
 
 
+_______________________________________________________________________________________________________________________
+#!/bin/bash
+#$ -q all.q
+#$ -cwd
+#$ -V
+#$ -pe smp 20
+#$ -N batch_alignment
+#$ -o alignment.log
+#$ -e alignment.err
+
+# Carregar módulos necessários
+module load Picard/3.0.0 
+module load Samtools/1.9
+module load  bwa/0.7.17
+
+# Diretórios de trabalho
+GENOME="/Storage/data2/drielli.canal/SNP/snake/genome/PITSTA_inv_final.fasta"
+TRIMMED_DIR="/Storage/data2/drielli.canal/SNP/snake/Trimmed_Paired"
+OUTPUT_DIR="/Storage/data2/drielli.canal/SNP/snake/aligned_results"
+mkdir -p $OUTPUT_DIR
+
+# Processar todos os arquivos R1
+for R1_FILE in $TRIMMED_DIR/*_1_trim.fastq.gz; do
+    # Extrair nome base da amostra (remove _1_trim.fastq.gz)
+    BASE_NAME=$(basename $R1_FILE | sed 's/_1_trim.fastq.gz//')
+    SAMPLE=$(echo $BASE_NAME | cut -d'_' -f1-2)  # Pega CHA720B de CHA720B_1
+    
+    # Construir nome do arquivo R2 corretamente
+    R2_FILE="${TRIMMED_DIR}/${BASE_NAME}_2_trim.fastq.gz"
+    
+    # Verificar se arquivo R2 existe
+    if [ ! -f "$R2_FILE" ]; then
+        echo "ERRO: Arquivo R2 correspondente não encontrado para $R1_FILE"
+        echo "Esperado: $R2_FILE"
+        continue  # Pula para a próxima amostra
+    fi
+    
+    echo "Processando amostra: $SAMPLE"
+    echo "Arquivo R1: $R1_FILE"
+    echo "Arquivo R2: $R2_FILE"
+    
+    # 1. Alinhamento com BWA
+    echo "Executando alinhamento..."
+    bwa mem -t 20 -R "@RG\tID:${SAMPLE}\tSM:${SAMPLE}" $GENOME $R1_FILE $R2_FILE \
+        > $OUTPUT_DIR/${SAMPLE}.sam 2> $OUTPUT_DIR/${SAMPLE}.bwa.log
+    
+    # 2. Converter SAM para BAM
+    echo "Convertendo para BAM..."
+    samtools view -Sb $OUTPUT_DIR/${SAMPLE}.sam > $OUTPUT_DIR/${SAMPLE}.bam
+    rm $OUTPUT_DIR/${SAMPLE}.sam  # Remover arquivo SAM intermediário
+    
+    # 3. Ordenar BAM
+    echo "Ordenando BAM..."
+    samtools sort -@ 20 $OUTPUT_DIR/${SAMPLE}.bam -o $OUTPUT_DIR/${SAMPLE}_sorted.bam
+    rm $OUTPUT_DIR/${SAMPLE}.bam  # Remover BAM não ordenado
+    
+    # 4. Indexar BAM ordenado
+    echo "Indexando BAM..."
+    samtools index $OUTPUT_DIR/${SAMPLE}_sorted.bam
+    
+    # 5. Remover duplicados com Picard
+    echo "Removendo duplicados..."
+    picard MarkDuplicates \
+        I=$OUTPUT_DIR/${SAMPLE}_sorted.bam \
+        O=$OUTPUT_DIR/${SAMPLE}_dedup.bam \
+        M=$OUTPUT_DIR/${SAMPLE}_metrics.txt \
+        REMOVE_DUPLICATES=true \
+        VALIDATION_STRINGENCY=LENIENT
+    
+    # 6. Indexar BAM deduplicado
+    echo "Indexando BAM deduplicado..."
+    samtools index $OUTPUT_DIR/${SAMPLE}_dedup.bam
+    
+    echo "Processamento concluído para $SAMPLE"
+    echo "----------------------------------------"
+done
+
+
+
+
 
