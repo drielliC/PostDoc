@@ -1,4 +1,12 @@
 samtools sort ../../bismark_output/CHA_720E_alig.CHA_720E_1 CHA_720G_align_.CHA_720G_1_deduplicated.deduplicated.bam -o CHA_720G_align_sorted.bam
 samtools index CHA_720D_align_sorted.bam
+
+#Calcula a profundidade de cobertura (número de reads alinhados) para cada posição do genoma.
 samtools depth  CHA_720D_align_sorted.bam > cobertura_CHA_720D_depth.txt
+#Saída: Um arquivo cobertura_CHA_720D_depth.txt com três colunas:
+#   Cromossomo.    Posição no genoma.    Profundidade de cobertura naquela posição.
+
+#    Função: Calcula a cobertura média do genoma a partir do arquivo gerado pelo samtools depth.
+ # Detalhes: sum+=$3: Soma todos os valores da terceira coluna (profundidade de cobertura).
+ # NR: Número total de linhas (posições) no arquivo.        sum/NR: Divide a soma total pela quantidade de posições, resultando na cobertura média.
 awk '{sum+=$3} END {print sum/NR}' cobertura_CHA_720D_depth.txt
