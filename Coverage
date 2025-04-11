@@ -1,0 +1,4 @@
+samtools sort ../../bismark_output/CHA_720E_alig.CHA_720E_1 CHA_720G_align_.CHA_720G_1_deduplicated.deduplicated.bam -o CHA_720G_align_sorted.bam
+samtools index CHA_720D_align_sorted.bam
+samtools depth  CHA_720D_align_sorted.bam > cobertura_CHA_720D_depth.txt
+awk '{sum+=$3} END {print sum/NR}' cobertura_CHA_720D_depth.txt
