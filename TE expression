@@ -1,0 +1,3 @@
+SalmonTE
+
+pip3 install snakemake docopt pandas --user
