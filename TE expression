@@ -1,3 +1,12 @@
 SalmonTE
 
 pip3 install snakemake docopt pandas --user
+
+install.packages(c("tidyverse", "scales", "WriteXLS", "BiocManager"))
+BiocManager::install("DESeq2", version = "3.8")
+q()
+
+git clone https://github.com/hyunhwaj/SalmonTE
+echo 'export PATH="$PATH:/home/user/Downloads/ISC_dados/SalmonTE"' >> ~/.bashrc
+source ~/.bashrc
+echo $PATH | grep "SalmonTE"
