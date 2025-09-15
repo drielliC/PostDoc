@@ -1,3 +1,4 @@
+___________________________________________________________
 Installation 
 # Create a new conda environment
 conda create -n jcvi python=3.9
@@ -32,6 +33,7 @@ python -m jcvi.formats.gff bed --type=mRNA --key=ID ~/Pitcairnia/reference_genom
 python -m jcvi.formats.gff bed --type=mRNA --key=ID ~/Pitcairnia/reference_genome/Palb-Annotation.gff3 -o ~/Pitcairnia/reference_genome/Palb.bed
 
 _____________________________________________________________________
+
 #Preparar o BLAST (all-vs-all entre as duas espécies)
 
 makeblastdb -in ~/Amanda/Pstaminea/Psta-Annotation.prot.fasta -dbtype prot -out ~/Pitc
