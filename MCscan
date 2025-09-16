@@ -42,10 +42,15 @@ makeblastdb -in ~/Amanda/Palbiflos/Palb-Annotation.prot.fasta -dbtype prot -out 
 airnia/reference_genome/Palb.db
 
 # BLAST recíproco: Psta vs Palb
-blastp -query ~/Pitcairnia/reference_genome/Psta.pep -db ~/Pitcairnia/reference_genome/Palb.db -out ~/Pitcairnia/reference_genome/Psta_vs_Palb.blast -outfmt 6 -evalue 1e-10 -num_threads 8
+:~/MCscan$ blastp -query P_staminea.fa -db Palb.db -out Psta_vs_Palb.blast -outfmt 6 -evalue 1e-10 -num_threads 8
 
 # BLAST recíproco: Palb vs Psta (opcional, para análise mais completa)
 blastp -query ~/Pitcairnia/reference_genome/Palb.pep -db ~/Pitcairnia/reference_genome/Psta.db -out ~/Pitcairnia/reference_genome/Palb_vs_Psta.blast -outfmt 6 -evalue 1e-10 -num_threads 8
+
+blastp -query P_albiflos.fa -db Psta.db -out Palb_vs_Psta.blast -outfmt 6 -evalue 1e-10 -num_threads 8     
+
+
+
 
 # BLAST recíproco: Psta vs Palb
 blastp -query  ~/Amanda/Pstaminea/Psta-Annotation.prot.fasta -db ~/Pitcairnia/reference_genome/Palb.db -out ~/Pitcairnia/reference_genome/Psta_vs_Palb.blast -outfmt 6 -evalue 1e-10 -num_threads 8
