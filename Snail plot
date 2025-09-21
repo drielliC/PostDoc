@@ -1,0 +1,13 @@
+# Criar estrutura de diretórios no seu home
+mkdir -p ~/blobtoolkit/taxdump
+mkdir -p ~/blobtoolkit/datasets
+
+# Baixar taxdump
+cd ~/blobtoolkit
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+tar -xzf taxdump.tar.gz -C taxdump/
+
+# Crie o dataset sem taxdump primeiro
+blobtools create \
+  --fasta PITALB_final_invcorrected.fasta \
+  ~/blobtoolkit/datasets/pitcairnia
