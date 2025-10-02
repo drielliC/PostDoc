@@ -115,15 +115,14 @@ singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif bismark_methylation_extrac
         --genome_folder ~/Pitcairnia/reference_genome --output ~/Pitcairnia/extraction/ ~/Pitcairnia/bismark_output_all/deduplicated/CHA_749F_deduplicated.bam
 singularity exec  /home/dcanal/SIF/bismark_v0.21.0.sif bismark2report --dir ~/Pitcairnia/extraction/
 
+ singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif \
+bismark2bedGraph -o ITA_688_CpG CpG_context_ITA_688_align_.ITA_688_1.deduplicated.txt.gz
 
-# ---------------------------------------------------------
-#  Optional: merge strands
-# --------------------------------------------------------- 
+singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif \
+bismark2bedGraph -o ITA_688_CHH --CX CHH_context_ITA_688_align_.ITA_688_1.deduplicated.txt.gz
 
-singularity exec ../../../SIF/bismark_v0.21.0.sif coverage2cytosine -o CHA_750 --merge_CpGs --genome_folder ../../reference_genome/ CHA_750_align.deduplicated.bismark.cov.gz 
-
-#or use .bam
-
+ singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif \
+bismark2bedGraph -o ITA_688_CHG --CX CHG_context_ITA_688_align_.ITA_688_1.deduplicated.txt.gz
 
 # ---------------------------------------------------------
 # 2c. Optional: Accounting for SNPs
