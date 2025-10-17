@@ -1,91 +1,219 @@
-install.packages("BiocManager")
-BiocManager::install("methylKit")
-
-library(methylKit)
-
-
-
-1. Importando os Dados
-
-O methylKit trabalha com dados de metilação de bisulfito, geralmente em arquivos .txt ou .csv. 
-Esses arquivos contêm informações sobre os locais de CpG e as porcentagens de metilação para cada posição. 
-Você pode carregar os dados com o comando read do methylKit, configurando o tipo de amostra e se é uma análise de CpGs, CHGs ou CHHs.
-
-Por exemplo:
+1. CONFIGURAÇÃO INICIAL E PACOTES
+r
+# Definir mirror do CRAN
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+Objetivo: Define de qual servidor baixar os pacotes R.
 
 r
-
-file.list <- list("sample1.txt", "sample2.txt", "sample3.txt", "sample4.txt")
-myobj <- methRead(file.list, 
-                  sample.id = list("control1", "control2", "treated1", "treated2"),
-                  assembly = "hg19",
-                  treatment = c(0, 0, 1, 1), # 0 = controle, 1 = tratado
-                  context = "CpG")
-
-
-
-2. Filtragem de Dados
-
-Após a importação, a filtragem de locais com baixa cobertura é essencial para remover ruídos. Use a função filterByCoverage para definir um limite mínimo e máximo de cobertura:
+# Lista de pacotes necessários
+required_packages <- c("methylKit", "ggplot2", "matrixStats", "GenomicRanges")
+Objetivo: Lista os pacotes essenciais para a análise.
 
 r
+# Função para instalar pacotes se estiverem faltando
+install_if_missing <- function(packages) {
+  for(pkg in packages) {
+    if(!require(pkg, character.only = TRUE, quietly = TRUE)) {
+      message("Instalando pacote: ", pkg)
+      install.packages(pkg, dependencies = TRUE, repos = "https://cloud.r-project.org")
+      library(pkg, character.only = TRUE)
+    } else {
+      message("Pacote ", pkg, " já está instalado")
+    }
+  }
+}
+Objetivo: Função inteligente que verifica e instala automaticamente os pacotes necessários.
 
-myobj.filtered <- filterByCoverage(myobj, lo.count = 10, hi.perc = 99.9)
-
-3. Normalização
-
-A normalização ajuda a corrigir variações entre as amostras. Use a função normalizeCoverage para este processo:
+2. PREPARAÇÃO DO AMBIENTE
+r
+# Definir o diretório de trabalho
+setwd("~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/")
+Objetivo: Define onde estão os arquivos de dados.
 
 r
+# Criar pasta para salvar resultados
+output_dir <- "~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/allo_methylKit_imagens"
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+Objetivo: Cria diretório para organizar todos os resultados.
 
-myobj.norm <- normalizeCoverage(myobj.filtered)
+3. CARREGAMENTO DOS DADOS
+r
+# Listar arquivos no diretório
+cov_files <- list.files(pattern = "\\.cov$|\\.cov\\.gz$")
+file.list <- as.list(cov_files)
+sample.id <- as.list(gsub("\\.cov$|\\.cov\\.gz$", "", cov_files))
+Objetivo:
 
-4. Unindo as Amostras
+Encontra automaticamente todos os arquivos .cov
 
-Para comparar metilação diferencial entre grupos (controle vs tratado), é necessário unir os dados:
+Cria lista de arquivos e nomes das amostras
 
 r
+# Definir tratamentos
+treatment <- c(1, 1, 1, 1, 0, 0, 0, 0, 0)
+Objetivo: Define grupos experimentais (ITA = 1, PBO = 0)
 
-meth <- unite(myobj.norm, destrand = TRUE)
+4. LEITURA E PROCESSAMENTO INICIAL
+r
+# Ler arquivos de metilação
+myobj <- methRead(file.list,
+                  sample.id = sample.id,
+                  assembly = "pitcairnia_assembly",
+                  treatment = treatment,
+                  context = "CpG",
+                  mincov = 10,
+                  pipeline = "bismarkCoverage")
+Objetivo:
 
-5. Análise de Metilação Diferencial
+Lê os arquivos de cobertura do Bismark
 
-A análise diferencial de metilação identifica regiões de CpG com diferenças significativas de metilação entre os grupos de controle e tratado. A função calculateDiffMeth executa esta análise:
+Filtra por cobertura mínima de 10x
+
+Especifica contexto CpG
+
+Associa tratamentos às amostras
 
 r
+# Filtragem por cobertura
+filtered.myobj <- filterByCoverage(myobj, lo.count = 10, lo.perc = NULL,
+                                   hi.count = NULL, hi.perc = 99.9)
+Objetivo: Remove regiões com cobertura muito baixa (<10) ou muito alta (>99.9º percentil)
 
-myDiff <- calculateDiffMeth(meth, covariates = NULL)
+5. ANÁLISE POR REGIÕES (DMRs)
+r
+# Criar janelas de 1000bp
+tiles <- tileMethylCounts(filtered.myobj, win.size = 1000, step.size = 1000, cov.bases = 5)
+Objetivo:
 
-6. Selecionando as Regiões Diferencialmente Metiladas (DMRs)
+Divide o genoma em janelas de 1000bp
 
-Para selecionar as regiões diferencialmente metiladas (DMRs) com um nível de significância específico, use a função getMethylDiff:
+Passo de 1000bp (janelas não sobrepostas)
+
+Mínimo 5 bases cobertas por janela
+
+Por que? Analisar regiões em vez de bases individuais é biologicamente mais relevante
+
+6. ESTATÍSTICAS DESCRITIVAS
+r
+# Plot distribuição de metilação por amostra
+getMethylationStats(tiles[[i]], plot = TRUE, both.strands = FALSE)
+Objetivo: Verifica a qualidade dos dados - como a metilação está distribuída em cada amostra.
 
 r
+# Unir amostras
+meth <- unite(tiles)
+Objetivo: Cria uma tabela única com todas as regiões presentes em todas as amostras.
 
-myDiffSig <- getMethylDiff(myDiff, difference = 25, qvalue = 0.01) # diferença mínima de 25%, q-valor < 0.01
-
-7. Visualização
-
-O methylKit permite criar gráficos para visualizar a distribuição de metilação. Por exemplo, para um histograma da cobertura de CpGs:
+7. ANÁLISE EXPLORATÓRIA
+r
+# Extrair porcentagem de metilação
+pm <- percMethylation(meth)
+Objetivo: Converte counts em porcentagens de metilação.
 
 r
-
-getCoverageStats(myobj, plot = TRUE)
-
-Para visualizar DMRs:
-
-r
-
-library(ggplot2)
-ggplot(myDiffSig, aes(x=chr, y=meth.diff)) +
-    geom_point() +
-    theme_minimal() +
-    labs(title="DMRs entre Tratado e Controle", x="Cromossomo", y="Diferença de Metilação")
-
-8. Exportando Resultados
-
-É possível exportar os resultados para um arquivo .csv com:
+# Médias e desvios padrão por grupo
+methmeans_ITA <- rowMeans(pm[, 1:4])
+methmeans_PBO <- rowMeans(pm[, 5:9])
+Objetivo: Calcula estatísticas separadas para cada grupo experimental.
 
 r
+# Filtrar regiões sem variação
+meth_filt <- meth[methmeans_ITA > 0 & methmeans_ITA < 100 | 
+                   methmeans_PBO > 0 & methmeans_PBO < 100, ]
+Objetivo: Remove regiões sempre 0% ou 100% metiladas (não informativas).
 
-write.csv(myDiffSig, "DMRs_significativas.csv")
+8. ANÁLISE DE COMPONENTES PRINCIPAIS (PCA)
+r
+PCASamples(meth_filt)
+Objetivo:
+
+Verifica se as amostras se agrupam por tratamento
+
+Identifica outliers
+
+Mostra a variação global nos dados
+
+9. METILAÇÃO DIFERENCIAL
+r
+# Reorganizar para comparação
+meth_comparison <- reorganize(meth_filt, sample.ids = sample.id, treatment = treatment)
+
+# Calcular metilação diferencial
+Diff_ITA_vs_PBO <- calculateDiffMeth(meth_comparison)
+Objetivo: Testa estatisticamente quais regiões têm metilação diferencial entre ITA e PBO.
+
+10. IDENTIFICAÇÃO DE DMRs
+r
+# DMRs com diferença de 25% e q-value < 0.05
+Diff_25p <- getMethylDiff(Diff_ITA_vs_PBO, difference = 25, qvalue = 0.05)
+Critérios:
+
+Diferença ≥ 25% em metilação entre grupos
+
+q-value < 0.05 (FDR corrigido)
+
+Hipermetiladas: maior metilação em ITA
+
+Hipometiladas: menor metilação em ITA
+
+11. VISUALIZAÇÃO
+r
+# Análise por cromossomo
+diffMethPerChr(Diff_ITA_vs_PBO, plot = TRUE, qvalue.cutoff = 0.05, meth.cutoff = 25)
+Objetivo: Mostra se DMRs estão distribuídas uniformemente ou concentradas em certos cromossomos.
+
+r
+# Heatmap
+pheatmap(as.matrix(pm_dmrs), clustering_method = "complete", show_rownames = FALSE)
+Objetivo: Clusteriza amostras e DMRs para padrões de metilação.
+
+12. ANOTAÇÃO FUNCIONAL
+r
+# Ler anotações
+gene_annotation <- readTranscriptFeatures(bed_file)
+
+# Anotar DMRs
+dmr_annotations <- annotateWithGeneParts(Diff_25p_gr, gene_annotation)
+Objetivo: Associa DMRs a:
+
+Promotores (±1kb do TSS)
+
+Éxons
+
+Íntrons
+
+Regiões intergênicas
+
+r
+# Distância para TSS
+tss_distances <- getAssociationWithTSS(dmr_annotations)
+Objetivo: Calcula distância de cada DMR para o início do gene mais próximo.
+
+13. EXPORTAÇÃO DE RESULTADOS
+Arquivos gerados:
+
+dados_metilacao_diferencial_completo.csv - Todos os dados
+
+DMRs_significativas.csv - Apenas DMRs significativas
+
+distancias_TSS.csv - Associação com genes
+
+genes_com_DMRs_promotoras.txt - Lista de genes afetados
+
+Vários plots em PDF
+
+FLUXO LÓGICO DA ANÁLISE:
+Preparação → Configurar ambiente e carregar dados
+
+Controle de qualidade → Estatísticas descritivas e PCA
+
+Identificação → Encontrar regiões diferencialmente metiladas
+
+Anotação → Associar DMRs a elementos genômicos
+
+Interpretação → Visualizações e resultados biológicos
+
+Cada etapa serve para garantir que os resultados sejam estatisticamente robustos e biologicamente interpretáveis!
+
