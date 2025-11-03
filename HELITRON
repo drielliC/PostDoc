@@ -1,0 +1,13 @@
+https://github.com/Zhenlisme/HELIANO?tab=readme-ov-file#conda
+
+
+#create the HELIANO environment
+conda create -n HELIANO
+#activate the HELIANO environment
+conda activate HELIANO
+# installation 
+conda install zhenlisme::HELIANO -c conda-forge -c bioconda
+conda deactivate
+
+heliano -g test.fa -is1 0 -is2 0 -o test_opt -w 15000
+ heliano -g ../Pitcairnia/reference_genome/PITSTA.fasta -is1 0 -is2 0 -o test_opt -w 15000
