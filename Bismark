@@ -138,3 +138,14 @@ zcat Col-0.g.vcf.gz | grep -v "#" | awk '$4=="G"&&$5=="A,<NON_REF>"' | cut -f1,2
 # Run the filtering script provided - coverage files end in .cov or .cov.gz
 bash filter_SNPs_from_covfile.sh <your_coverage_file> Col-0_SNPs_CtoT.txt
 bash filter_SNPs_from_covfile.sh <output_from_command_above> Col-0_SNPs_GtoA.txt
+
+
+# ---------------------------------------------------------
+bedgraph to each context
+
+for f in CpG_context_*_deduplicated*.txt.gz; do
+  sample=${f#CpG_context_};   sample=${sample%%_align_*}   echo "CpG -> $sample";   singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif     bismark2bedGraph     --dir bedgraph     -o "${sample}_CpG"     "$f"; done
+
+for f in CHG_context_*_deduplicated*.txt.gz; do
+  sample=${f#CHG_context_};   sample=${sample%%_align_*}   echo "CHG -> $sample";   singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif     bismark2bedGraph  -CX  --dir bedgraph     -o "${sample}_CHG"     "$f"; done
+
