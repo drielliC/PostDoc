@@ -1,0 +1,132 @@
+# Criar o diretório de output se não existir
+mkdir -p ~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/expression
+
+# Ir para onde estão os arquivos
+cd ~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/
+
+# Gerar os _coverage.txt já salvando no diretório correto
+for file in $(ls *CpG_cov_filtrado)
+do
+    base=$(basename ${file} "_CpG_cov_filtrado")
+    cut -f1,2,5,6 ${file} > ~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/expression/${base}_coverage.txt
+done
+
+##O cut -f1,2,5,6 ${file} seleciona apenas 4 colunas do arquivo original. Vamos recalcular a metilação ponderada no R usando count_C / (count_C + count_T)
+
+
+##______R sofware____
+nano allo_Rscript_coverage.R
+head ITA_688_CpG_cov_filtrado #para confirmar se as colunas estão corretas 
+##____________________
+# Definir mirror do CRAN
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Lista de pacotes necessários
+required_packages <- c("readr")
+
+# Função para instalar pacotes se estiverem faltando
+install_if_missing <- function(packages) {
+  for(pkg in packages) {
+    if(!require(pkg, character.only = TRUE, quietly = TRUE)) {
+      message("Instalando pacote: ", pkg)
+      install.packages(pkg, dependencies = TRUE, repos = "https://cloud.r-project.org")
+      library(pkg, character.only = TRUE)
+    } else {
+      message("Pacote ", pkg, " já está instalado")
+    }
+  }
+}
+
+# Instalar os pacotes necessários
+install_if_missing(required_packages)
+
+# Carregar os pacotes
+library(readr)
+
+# Definir diretórios
+input_dir  <- "~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/"
+output_dir <- "~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/expression/"
+
+# Criar o diretório de output se não existir
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+  message("Diretório criado: ", output_dir)
+} else {
+  message("Diretório já existe: ", output_dir)
+}
+
+# Listar arquivos CpG
+file.list <- list.files(input_dir, pattern = "*_coverage.txt", full.names = TRUE)
+
+# Conferir arquivos encontrados
+message("Arquivos encontrados:")
+print(file.list)
+
+# Função de leitura
+read_file1 <- function(x){
+  read_delim(x, "\t", col_names = FALSE, show_col_types = FALSE)
+}
+
+# Ler todos os arquivos
+samples <- lapply(file.list, read_file1)
+
+# Nomes em ordem alfabética (igual ao file.list)
+sample_names <- list(
+  "STA_ITA_688",
+  "STA_ITA_693A",
+  "STA_ITA_698",
+  "STA_ITA_699C",
+  "ALB_PBO_668",
+  "ALB_PBO_669",
+  "ALB_PBO_677",
+  "ALB_PBO_678",
+  "ALB_PBO_681"
+)
+
+names(samples) <- sample_names
+
+# Processar e salvar cada amostra
+for(i in seq_along(samples)){
+  colnames(samples[[i]]) <- c("chr", "cpg", "count_c", "count_t")
+  samples[[i]]$total_coverage <- samples[[i]]$count_c + samples[[i]]$count_t
+  samples[[i]] <- samples[[i]][, -4]  # remove coluna count_t
+  final_file <- samples[[i]]
+  myfile <- file.path(output_dir, paste0(names(samples[i]), "_final_coverage.txt"))
+  write.table(final_file, file = myfile, quote = FALSE, sep = "\t", row.names = FALSE)
+  message("Salvo: ", myfile)
+
+
+#get bed.file
+
+# Extrair as colunas necessárias
+cut -f 1,4,5,9 Psta-Annotation-HQ.gff3 > Psta_annotation_HQ.bed
+
+# Remover o "ID=" 
+sed -i "s/ID=//g"  Psta_annotation_HQ.bed
+# Remover tudo depois do ";"
+sed -i "s/;.*//g"  Psta_annotation_HQ.bed
+
+# Extrair colunas ignorando linhas que começam com #
+grep -v "^#" Psta-Annotation-HQ.gff3 | cut -f 1,4,5,9 > Psta_annotation_HQ.bed
+
+# Remover o "ID="
+sed -i "s/ID=//g" Psta_annotation_HQ.bed
+
+# Remover tudo depois do ";"
+sed -i "s/;.*//g" Psta_annotation_HQ.bed
+
+# Apenas genes
+grep -v "exon" Psta_annotation_HQ.bed | grep -v "\." > Psta_annotation_genes_HQ.bed
+
+# Apenas exons
+grep "exon" Psta_annotation_HQ.bed > Psta_annotation_exons_HQ.bed
+
+# Apenas transcritos (mRNA)
+grep "\." Psta_annotation_HQ.bed | grep -v "exon" > Psta_annotation_transcripts_HQ.bed
+
+# Conferir o resultado
+head Psta_annotation_HQ.bed
+____________________________________________
+#Gene expression and DNA methylation relationships
+#Investigar se genes mais ou menos metilados tendem a ser mais ou menos expressos — e se genes diferencialmente metilados também são diferencialmente expressos.
+# Genome-wide correlations. In this exercise, we will use gene expression data (FPKMs) and weighted methylation data from Yu et al. 2023. 
