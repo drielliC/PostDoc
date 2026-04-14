@@ -333,3 +333,82 @@ https://ashleyschwartz.com/posts/2023/05/deseq2-tutorial
 || ummary"                                                                    ||
 ||                                                                            ||
 \\============================================================================//
+
+
+
+
+
+
+
+
+┌──────────────────────────────────────────────────┐
+│ 1. QC — FastQC / MultiQC                          │
+│    Assess raw read quality, adapter content        │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 2. TRIMMING — fastp / Trimmomatic                  │
+│    Remove adapters, low-quality bases              │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 3. ALIGNMENT — STAR / HISAT2 (splice-aware)        │
+│    Map reads to reference genome                   │
+│    Output: sorted BAM files                        │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 4. COUNTING — featureCounts / htseq-count          │
+│    Count reads per gene using GTF annotation       │
+│    Output: count matrix (genes × samples)          │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 5. DIFFERENTIAL EXPRESSION — DESeq2 / edgeR        │
+│    Statistical testing: which genes differ?        │
+│    Output: log2FC, p-values, adjusted p-values     │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 6. VISUALIZATION — ggplot2, pheatmap, IGV          │
+│    Volcano plots, MA plots, PCA, heatmaps          │
+└────────────────────┬─────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ 7. PATHWAY ANALYSIS — clusterProfiler, GSEA        │
+│    Gene Ontology, KEGG pathways, gene set testing  │
+└──────────────────────────────────────────────────┘
+
+# Generate genome index (once per genome — needs ~30 GB RAM for human)
+STAR --runMode genomeGenerate \
+     --genomeDir star_index/ \
+     --genomeFastaFiles Homo_sapiens.GRCh38.dna.primary_assembly.fa \
+     --sjdbGTFfile Homo_sapiens.GRCh38.110.gtf \
+     --sjdbOverhang 149 \
+     --runThreadN 8
+
+# Align reads (per sample)
+STAR --genomeDir star_index/ \
+     --readFilesIn sample_R1.fastq.gz sample_R2.fastq.gz \
+     --readFilesCommand zcat \
+     --outSAMtype BAM SortedByCoordinate \
+     --quantMode GeneCounts \
+     --outFileNamePrefix results/star/sample_ \
+     --runThreadN 8
+
+# Index the output BAM
+samtools index results/star/sample_Aligned.sortedByCoord.out.bam
+
+# Count reads per gene for all samples at once
+featureCounts \
+    -a Homo_sapiens.GRCh38.110.gtf \
+    -o results/counts/gene_counts.txt \
+    -T 4 \
+    -p --countReadPairs \
+    -s 2 \
+    results/star/*_Aligned.sortedByCoord.out.bam
+
+# -a: annotation GTF
+# -p --countReadPairs: count fragments, not individual reads (paired-end)
+# -s 2: strand-specific (2 = reverse, most common for Illumina dUTP protocol)
+# -T: threads
