@@ -334,13 +334,7 @@ https://ashleyschwartz.com/posts/2023/05/deseq2-tutorial
 ||                                                                            ||
 \\============================================================================//
 
-
-
-
-
-
-
-
+TUTORIAL
 ┌──────────────────────────────────────────────────┐
 │ 1. QC — FastQC / MultiQC                          │
 │    Assess raw read quality, adapter content        │
@@ -398,8 +392,85 @@ STAR --genomeDir star_index/ \
 
 # Index the output BAM
 samtools index results/star/sample_Aligned.sortedByCoord.out.bam
-
+__________________________________________________________________________________
 # Count reads per gene for all samples at once
+
+#!/bin/bash
+#SBATCH --job-name=featureCounts_final
+#SBATCH -p general
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=20G
+#SBATCH --time=12:00:00
+#SBATCH --output=/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/dri/featureCounts_final_%j.out
+#SBATCH --error=/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/dri/featureCounts_final_%j.err
+
+# Definir variáveis com caminhos absolutos
+featureCounts_bin="/home/lucasalx@bio.ib.unicamp.br/programas/subread-2.1.1-Linux-x86_64/bin/featureCounts"
+gtf_file="/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/Psta-Annotation.gtf"
+outfile="/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/dri/results/counts/gene_counts.txt"
+
+# Criar diretório de saída se não existir
+mkdir -p /home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/dri/results/counts/
+
+# Executar featureCounts
+${featureCounts_bin} \
+    -a ${gtf_file} \
+    -o ${outfile} \
+    -T 8 \
+    -p --countReadPairs \
+    -s 2 \
+    /scratch/lucasalx/dri/mapped/CHA737A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA737B_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA738_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA742_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA742B_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA744_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA745A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA746_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA747_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA748A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA748B_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA749B_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA750_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/PBO670_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/PBO674A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/PBO675_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/PBO677_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/PBO678_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC106_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC108_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC131_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC725_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA720E_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA749C_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA749F_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA749G_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/CHA749I_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA689_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA691A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA693A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA696_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA698_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA699C_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA703A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/ITA705_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC002_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC006_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC007_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC014_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC014A_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC015_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC021_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC731_Aligned.sortedByCoord.out.bam \
+    /scratch/lucasalx/dri/mapped/URC732_Aligned.sortedByCoord.out.bam
+
+echo "FeatureCounts finalizado!"
+echo "Verificando arquivos de saída:"
+ls -lh ${outfile} ${outfile}.summary
+
+
+
 featureCounts \
     -a Homo_sapiens.GRCh38.110.gtf \
     -o results/counts/gene_counts.txt \
@@ -408,7 +479,11 @@ featureCounts \
     -s 2 \
     results/star/*_Aligned.sortedByCoord.out.bam
 
-# -a: annotation GTF
-# -p --countReadPairs: count fragments, not individual reads (paired-end)
-# -s 2: strand-specific (2 = reverse, most common for Illumina dUTP protocol)
-# -T: threads
+# -a: especifica o arquivo GTF com coordenadas dos genes
+# -o: define o arquivo de saída
+# -p --countReadPairs: count fragments, not individual reads (paired-end) ; Paired-end: -p indica dados paired-end; --countReadPairs conta fragmentos (pares) ao invés de reads individuais
+# -s 2: strand-specific (0 = unstranded; 1 = stranded (forward); 2 = stranded (reverse), 2 é o mais comum pra Illumina dUTP protocol)
+# -T: threads = 8
+
+
+
