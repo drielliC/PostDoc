@@ -489,3 +489,393 @@ featureCounts \
 #gene_counts.txt = matriz de contagem principal
 #gene_counts.txt.summary = estatísticas do mapeamento
 ____________________________________________________________________________
+
+
+#!/usr/bin/env Rscript
+# =============================================================================
+# Análise de Expressão Diferencial entre P. albiflos e P. staminea - VERSÃO FINAL
+# =============================================================================
+
+library(DESeq2)
+library(dplyr)
+library(ggplot2)
+library(pheatmap)
+
+# -----------------------------------------------------------------------------
+# ETAPA 1: CARREGAMENTO E PREPARAÇÃO DOS DADOS
+# -----------------------------------------------------------------------------
+cat("=== CARREGANDO DADOS ===\n")
+
+# Carregar matriz de contagem do featureCounts
+raw <- read.delim("~/amanda/rnaseq/dri/results/counts/gene_counts.txt", comment.char="#")
+cat("Dimensões da matriz bruta:", dim(raw), "\n")
+
+# Extrair apenas as colunas de contagem (7 em diante)
+counts <- raw[, 7:ncol(raw)]
+
+# Definir nomes das linhas como IDs dos genes
+rownames(counts) <- raw$Geneid
+
+# CORRIGIR nomes das colunas - R converte / em . e outros caracteres especiais
+# Formato que o R lê: X.scratch.lucasalx.dri.mapped.CHA737A_Aligned.sortedByCoord.out.bam
+# Precisamos extrair apenas: CHA737A
+original_names <- colnames(counts)
+clean_names <- c()
+
+for(col_name in original_names) {
+  # Extrair tudo após "mapped." e antes de "_Aligned"
+  if(grepl("mapped\\.", col_name)) {
+    sample_id <- gsub(".*mapped\\.([^_]+)_.*", "\\1", col_name)
+    clean_names <- c(clean_names, sample_id)
+  } else {
+    # Fallback - tentar extrair padrão conhecido
+    sample_id <- gsub(".*\\.([A-Z0-9]+[A-Z]?)_.*|.*\\.([A-Z0-9]+[A-Z]?)$", "\\1\\2", col_name)
+    clean_names <- c(clean_names, sample_id)
+  }
+}
+
+colnames(counts) <- clean_names
+
+cat("Dimensões da matriz de contagem:", dim(counts), "\n")
+cat("Total de amostras:", ncol(counts), "\n")
+
+# Mostrar amostras após limpeza
+sample_names <- colnames(counts)
+cat("Amostras após limpeza dos nomes:\n")
+for(i in 1:length(sample_names)) {
+  cat(i, ":", sample_names[i], "\n")
+}
+
+# -----------------------------------------------------------------------------
+# ETAPA 2: CLASSIFICAÇÃO DAS AMOSTRAS POR ESPÉCIE
+# -----------------------------------------------------------------------------
+cat("\n=== CLASSIFICANDO AMOSTRAS ===\n")
+
+# Lista das amostras P. albiflos (control)
+albiflos_samples <- c("CHA737A", "CHA737B", "CHA738", "CHA742", "CHA742B", 
+                      "CHA744", "CHA745A", "CHA746", "CHA747", "CHA748A", 
+                      "CHA748B", "CHA749B", "CHA750", "PBO670", "PBO674A", 
+                      "PBO675", "PBO677", "PBO678", "URC106", "URC108", 
+                      "URC131", "URC725")
+
+# Lista das amostras P. staminea (treatment)
+staminea_samples <- c("CHA720E", "CHA749C", "CHA749F", "CHA749G", "CHA749I", 
+                      "ITA689", "ITA691A", "ITA693A", "ITA696", "ITA698", 
+                      "ITA699C", "ITA703A", "ITA705", "URC002", "URC006", 
+                      "URC007", "URC014", "URC014A", "URC015", "URC021", 
+                      "URC731", "URC732")
+
+# Classificar cada amostra
+condition <- c()
+albiflos_found <- 0
+staminea_found <- 0
+unclassified <- c()
+
+for(sample in sample_names) {
+  if(sample %in% albiflos_samples) {
+    condition <- c(condition, "control")
+    albiflos_found <- albiflos_found + 1
+    cat(sample, "-> control (P. albiflos)\n")
+  } else if(sample %in% staminea_samples) {
+    condition <- c(condition, "treatment")
+    staminea_found <- staminea_found + 1
+    cat(sample, "-> treatment (P. staminea)\n")
+  } else {
+    # Para amostras não classificadas, tentar identificar por padrão
+    unclassified <- c(unclassified, sample)
+    cat(sample, "-> NÃO CLASSIFICADA (verificar manualmente)\n")
+    
+    # Classificação manual baseada em padrões conhecidos
+    if(grepl("^(CHA|PBO|URC)", sample) && !grepl("CHA720E|CHA749[CFGI]", sample)) {
+      condition <- c(condition, "control")
+      albiflos_found <- albiflos_found + 1
+      cat("  -> RECLASSIFICADA como control (P. albiflos)\n")
+    } else if(grepl("^(ITA|URC)", sample) || grepl("CHA720E|CHA749[CFGI]", sample)) {
+      condition <- c(condition, "treatment")
+      staminea_found <- staminea_found + 1
+      cat("  -> RECLASSIFICADA como treatment (P. staminea)\n")
+    } else {
+      # Se não conseguir classificar, parar execução
+      stop(paste("ERRO: Não foi possível classificar a amostra:", sample))
+    }
+  }
+}
+
+# Verificar distribuição
+cat("\nDistribuição final:\n")
+cat("Control (P. albiflos):", albiflos_found, "amostras\n")
+cat("Treatment (P. staminea):", staminea_found, "amostras\n")
+
+if(length(unclassified) > 0) {
+  cat("Amostras que precisaram reclassificação manual:\n")
+  print(unclassified)
+}
+
+# Sample metadata
+coldata <- data.frame(
+  condition = factor(condition, levels = c("control", "treatment")),
+  row.names = colnames(counts)
+)
+
+# Verificação final
+condition_table <- table(coldata$condition)
+print(condition_table)
+
+if(any(condition_table < 2)) {
+  stop("ERRO: Precisa de pelo menos 2 amostras por condição!")
+}
+
+cat("Verificação OK: Análise pode prosseguir\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 3: CRIAÇÃO DO OBJETO DESeq2
+# -----------------------------------------------------------------------------
+cat("\n=== CRIANDO OBJETO DESEQ2 ===\n")
+
+dds <- DESeqDataSetFromMatrix(
+  countData = counts, 
+  colData = coldata, 
+  design = ~condition
+)
+cat("Objeto DESeq2 criado com", nrow(dds), "genes e", ncol(dds), "amostras\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 4: FILTRAGEM DE GENES
+# -----------------------------------------------------------------------------
+cat("\n=== FILTRAGEM DE GENES ===\n")
+
+cat("Genes antes da filtragem:", nrow(dds), "\n")
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep, ]
+cat("Genes após filtragem (>=10 contagens):", nrow(dds), "\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 5: ANÁLISE DIFERENCIAL
+# -----------------------------------------------------------------------------
+cat("\n=== EXECUTANDO DESEQ2 ===\n")
+
+dds <- DESeq(dds)
+res <- results(dds, contrast = c("condition", "treatment", "control"), alpha = 0.05)
+res <- res[order(res$padj), ]
+
+# -----------------------------------------------------------------------------
+# ETAPA 6: RESUMO DOS RESULTADOS
+# -----------------------------------------------------------------------------
+cat("\n=== RESUMO DOS RESULTADOS ===\n")
+
+summary(res)
+
+sig <- subset(res, padj < 0.05 & abs(log2FoldChange) > 1)
+cat("\n", nrow(sig), "genes significativamente diferencialmente expressos\n")
+cat(sum(sig$log2FoldChange > 0, na.rm=T), "upregulados em treatment (P. staminea)\n")
+cat(sum(sig$log2FoldChange < 0, na.rm=T), "downregulados em treatment (P. staminea)\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 7: GRÁFICOS
+# -----------------------------------------------------------------------------
+cat("\n=== GERANDO GRÁFICOS ===\n")
+
+# Volcano Plot
+df <- as.data.frame(res) %>% 
+  mutate(significant = !is.na(padj) & padj < 0.05 & abs(log2FoldChange) > 1)
+
+p1 <- ggplot(df, aes(x = log2FoldChange, y = -log10(padj), color = significant)) +
+  geom_point(size = 0.5, alpha = 0.6) +
+  scale_color_manual(values = c("grey70", "red3")) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue") +
+  theme_minimal() +
+  labs(
+    title = "Volcano Plot: Treatment vs Control (P. staminea vs P. albiflos)",
+    x = "log2 Fold Change", y = "-log10(adjusted p-value)"
+  )
+
+ggsave("volcano_plot.png", p1, width = 8, height = 6)
+cat("Volcano plot salvo\n")
+
+# PCA Plot
+vsd <- vst(dds)
+p2 <- plotPCA(vsd, intgroup = "condition") + 
+  theme_minimal() +
+  labs(title = "PCA: Agrupamento por Condição")
+
+ggsave("pca_plot.png", p2, width = 8, height = 6)
+cat("PCA plot salvo\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 8: HEATMAPS
+# -----------------------------------------------------------------------------
+cat("\n=== GERANDO HEATMAPS ===\n")
+
+# Anotação para heatmaps
+annotation_col <- data.frame(
+  Condition = coldata$condition,
+  row.names = rownames(coldata)
+)
+
+# Heatmap top 50 genes
+if(sum(!is.na(res$padj)) > 0) {
+  num_to_plot <- min(50, sum(!is.na(res$padj)))
+  top_genes <- head(rownames(res[order(res$padj), ]), num_to_plot)
+  mat_top <- assay(vsd)[top_genes, ]
+  
+  png("heatmap_top50.png", width = 1200, height = 800)
+  pheatmap(
+    mat_top, 
+    scale = "row",
+    annotation_col = annotation_col,
+    color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+    main = paste("Top", num_to_plot, "Genes Diferenciais"),
+    fontsize = 8
+  )
+  dev.off()
+  cat("Heatmap top genes salvo\n")
+}
+
+# Heatmap genes de interesse
+cat("\n=== GENES DE INTERESSE ===\n")
+
+if(file.exists("~/amanda/list_clean.txt")) {
+  genes_of_interest <- readLines("~/amanda/list_clean.txt")
+  cat("Genes de interesse:", length(genes_of_interest), "\n")
+  print(genes_of_interest)
+  
+  available_genes <- intersect(genes_of_interest, rownames(vsd))
+  cat("Encontrados nos dados:", length(available_genes), "\n")
+  
+  if(length(available_genes) > 0) {
+    print(available_genes)
+    
+    mat_interest <- assay(vsd)[available_genes, , drop = FALSE]
+    
+    png("heatmap_genes_interesse.png", width = 1200, height = 600)
+    pheatmap(
+      mat_interest,
+      scale = "row",
+      annotation_col = annotation_col,
+      color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+      main = "Genes de Interesse: P. staminea vs P. albiflos",
+      fontsize = 12,
+      cellwidth = 25,
+      cellheight = 40
+    )
+    dev.off()
+    cat("Heatmap genes de interesse salvo\n")
+    
+    # Resultados específicos
+    cat("\n=== RESULTADOS DOS GENES DE INTERESSE ===\n")
+    if(any(available_genes %in% rownames(res))) {
+      interest_results <- res[available_genes[available_genes %in% rownames(res)], ]
+      print(interest_results)
+      write.csv(as.data.frame(interest_results), "genes_interesse_resultados.csv")
+    }
+  } else {
+    cat("AVISO: Genes não encontrados. Primeiros genes nos dados:\n")
+    print(head(rownames(vsd), 10))
+  }
+} else {
+  cat("Arquivo ~/amanda/list_clean.txt não encontrado\n")
+}
+
+# -----------------------------------------------------------------------------
+# ETAPA 9: SALVAR RESULTADOS
+# -----------------------------------------------------------------------------
+cat("\n=== SALVANDO RESULTADOS ===\n")
+
+write.csv(as.data.frame(res), "resultados_deseq2_completo.csv")
+write.csv(as.data.frame(sig), "resultados_deseq2_significativos.csv")
+write.csv(counts(dds, normalized = TRUE), "contagens_normalizadas.csv")
+write.csv(coldata, "metadados_amostras.csv")
+
+cat("\n=== ANÁLISE CONCLUÍDA ===\n")
+cat("Resumo final:\n")
+cat("- Amostras analisadas:", ncol(dds), "\n")
+cat("- Control (P. albiflos):", sum(coldata$condition == "control"), "\n") 
+cat("- Treatment (P. staminea):", sum(coldata$condition == "treatment"), "\n")
+cat("- Genes analisados:", nrow(dds), "\n")
+cat("- Genes diferenciais (p<0.05, |FC|>2):", nrow(sig), "\n")
+
+
+##COMENTS
+design = ~condition
+~condition: Fórmula estatística que diz "analisar diferenças baseadas na variável 'condition'" ou seja compara treatment (P. staminea) vs control (P. albiflos)
+
+Contraste: rcontrast = c("condition", "treatment", "control")
+Primeiro elemento ("condition"): Nome da variável no design
+Segundo elemento ("treatment"): Grupo numerador (P. staminea)
+Terceiro elemento ("control"): Grupo denominador (P. albiflos)
+Resultado: log2FoldChange = log2(treatment/control)
+
+Nível de significância: ralpha = 0.05
+5% de chance de falso positivo (erro tipo I)
+P-valores ajustados < 0.05 são considerados significativos
+
+Filtros aplicados:
+rrowSums(counts(dds)) >= 10
+Remove genes muito pouco expressos (< 10 contagens totais)
+Reduz ruído estatístico
+
+Critérios de Genes Diferenciais
+rsubset(res, padj < 0.05 & abs(log2FoldChange) > 1)
+padj < 0.05: P-valor ajustado por múltiplos testes (método Benjamini-Hochberg)
+abs(log2FoldChange) > 1: Mudança mínima de 2x (log2(2) = 1)
+
+Interpretação dos log2FoldChange
+log2FC > 0: Gene mais expresso em treatment (P. staminea)
+log2FC < 0: Gene mais expresso em control (P. albiflos)
+log2FC = 1: 2x mais expresso
+log2FC = 2: 4x mais expresso
+log2FC = -1: 2x menos expresso
+
+ Transformações de Dados
+Variance Stabilizing Transformation (VST):
+rvsd <- vst(dds)
+Para que serve: Remove a dependência da variância em relação à média
+Quando usar: PCA, clustering, heatmaps
+Não usar para: Testes estatísticos (usar contagens brutas)
+
+Parâmetros dos Gráficos
+Volcano Plot:
+Eixo X: log2FoldChange (magnitude da mudança)
+Eixo Y: -log10(padj) (força da significância)
+Linhas tracejadas: Cutoffs (p=0.05 e FC=2x)
+Pontos vermelhos: Genes significativos
+
+PCA Plot:
+rplotPCA(vsd, intgroup = "condition")
+intgroup: Variável para colorir pontos
+PC1/PC2: Primeiros componentes principais (maior variação)
+Objetivo: Ver se amostras se agrupam por espécie
+
+Heatmap:
+rpheatmap(mat, scale = "row", annotation_col = annotation_col)
+scale = "row": Normaliza cada gene individualmente (z-score)
+annotation_col: Barra colorida mostrando as condições
+Cores: Azul (baixa expressão) → Branco (média) → Vermelho (alta expressão)
+
+Métodos Estatísticos do DESeq2
+Normalização:
+Size factors: Corrige diferenças no número total de reads entre amostras
+Método: Mediana das razões (mais robusto que simples CPM)
+Estimação de Dispersão:
+Gene-wise: Dispersão individual de cada gene
+Fitted: Curva suavizada baseada na média de expressão
+Final: Combina individual + fitted (shrinkage)
+
+Teste Estatístico:
+Wald test: Para comparações simples (como a nossa)
+Distribuição: Binomial negativa (apropriada para contagens)
+Hipótese nula: Não há diferença entre condições
+
+Controle de Qualidade
+Verificações que o script faz:
+Número mínimo de amostras: ≥2 por condição
+Classificação correta: Todas as amostras têm condição definida
+Genes suficientes: Após filtros, ainda há genes para analisar
+
+FLUXO COMPLETO:
+Dados brutos → featureCounts → matriz de contagens
+Matriz → limpeza nomes → classificação amostras
+DESeq2 object → filtros → normalização
+Análise diferencial → ajuste p-valores → resultados
+Visualizações → interpretação → conclusões biológicas
