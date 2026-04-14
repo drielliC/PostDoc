@@ -484,6 +484,8 @@ featureCounts \
 # -p --countReadPairs: count fragments, not individual reads (paired-end) ; Paired-end: -p indica dados paired-end; --countReadPairs conta fragmentos (pares) ao invés de reads individuais
 # -s 2: strand-specific (0 = unstranded; 1 = stranded (forward); 2 = stranded (reverse), 2 é o mais comum pra Illumina dUTP protocol)
 # -T: threads = 8
-
-
-
+#Confirmação: Imprime mensagem de sucesso
+#Verificação: Lista os arquivos de saída com tamanhos (-lh)
+#gene_counts.txt = matriz de contagem principal
+#gene_counts.txt.summary = estatísticas do mapeamento
+____________________________________________________________________________
