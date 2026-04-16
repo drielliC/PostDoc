@@ -1,5 +1,11 @@
-#DNA Methylation
-#Short-reads workflow
+#DNA METHYLATION WORKFLOW - https://github.com/drielliC
+
+# ---------------------------------------------------------
+#INSTALL BISMARK
+source /scratch/lucasalx/miniconda3/bin/activate
+conda install -c bioconda bismark -y
+which bismark && bismark --version
+
 # ---------------------------------------------------------
 #1. Obtain raw reads and subsample
 # ---------------------------------------------------------
