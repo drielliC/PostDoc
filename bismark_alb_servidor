@@ -1,0 +1,19 @@
+  GNU nano 7.2                                       run_bismark_prep.sh
+
+#!/bin/bash
+#SBATCH --job-name=bismark_prep
+#SBATCH -p general
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=32G
+#SBATCH --output=/scratch/lucasalx/dri/methyl_alb/bismark_prep_%j.out
+#SBATCH --error=/scratch/lucasalx/dri/methyl_alb/bismark_prep_%j.err
+
+export PATH="/scratch/lucasalx/miniconda3/bin:$PATH"
+source /scratch/lucasalx/miniconda3/bin/activate /scratch/lucasalx/envs/te_pipeline
+
+GENOME_DIR="/scratch/lucasalx/dri/methyl_alb/albiflos/reference_genome/"
+
+bismark_genome_preparation --parallel 15 $GENOME_DIR
+
+_________________________________________________________________________________________
