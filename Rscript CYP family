@@ -1,0 +1,212 @@
+# Carregar as bibliotecas necessárias
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(tidyverse)
+
+# Ler e preparar os dados
+df <- read_csv("P450_2025.csv")
+names(df) <- c("TYPE", "CYP_subfamily", "A_thaliana", "I_puberulus", "S_bicolor")
+
+# Transformar para formato longo
+df_long <- df %>%
+  pivot_longer(
+    cols = c(A_thaliana, I_puberulus, S_bicolor),
+    names_to = "Species", 
+    values_to = "Count"
+  )
+
+# Heatmap com cores graduais
+ggplot(df_long, aes(x = Species, y = as.factor(CYP_subfamily), fill = Count)) +
+  geom_tile(color = "white", linewidth = 0.8) +
+  geom_text(aes(label = ifelse(Count > 0, Count, "")), 
+            color = "white", size = 2.8, fontface = "bold") +
+  scale_fill_gradientn(
+    colors = c("#457B9D", "#A8DADC", "#F4A261", "#E63946"),
+    values = scales::rescale(c(0, 1, 10, 100)),
+    na.value = "white",
+    name = "Número de Genes"
+  ) +
+  facet_grid(TYPE ~ ., scales = "free_y", space = "free") +
+  labs(
+    title = "Heatmap - Famílias CYP por Espécie",
+    subtitle = "A type vs Non A Type",
+    x = "Espécie",
+    y = "Subfamília CYP"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11, face = "bold"),
+    axis.text.y = element_text(size = 7, face = "bold"),
+    strip.text = element_text(face = "bold", size = 12),
+    panel.grid = element_blank(),
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5)
+  )
+
+# Heatmap com paleta de cores mais definida
+ggplot(df_long, aes(x = Species, y = as.factor(CYP_subfamily), fill = Count)) +
+  geom_tile(color = "white", linewidth = 0.8, width = 0.9, height = 0.9) +
+  geom_text(aes(label = ifelse(Count > 0, Count, "")), 
+            color = "white", size = 2.5, fontface = "bold") +
+  scale_fill_gradientn(
+    colors = c("#1E88E5", "#64B5F6", "#FFB74D", "#E53935", "#B71C1C"),
+    values = scales::rescale(c(0, 1, 5, 20, 100)),
+    name = "Número de Genes",
+    breaks = c(0, 1, 5, 10, 25, 50, 100)
+  ) +
+  facet_grid(TYPE ~ ., scales = "free_y", space = "free") +
+  labs(
+    title = "Distribuição de Famílias CYP",
+    subtitle = "Intensidade da cor = número de genes",
+    x = "Espécie",
+    y = "Subfamília CYP"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10, face = "bold"),
+    axis.text.y = element_text(size = 6.5, face = "bold"),
+    strip.text = element_text(face = "bold", size = 11, color = "white"),
+    strip.background = element_rect(fill = "grey20"),
+    panel.grid = element_blank(),
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5)
+  )
+
+____________________________________________
+
+# Versão com paleta de cores mais suave
+ggplot(df_long, aes(x = Species, y = as.factor(CYP_subfamily), 
+                    size = Count, color = Count)) +
+  geom_point(alpha = 0.85) +
+  scale_size_continuous(
+    range = c(1, 15),
+    name = "Número de Genes",
+    breaks = c(1, 10, 25, 50, 75, 100)
+  ) +
+  scale_color_gradientn(
+    colors = c("#1E88E5", "#64B5F6", "#4DB6AC", "#FFB74D", "#FF9800", "#F44336", "#D32F2F"),
+    values = scales::rescale(c(0, 1, 5, 15, 30, 60, 100)),
+    name = "Número de Genes"
+  ) +
+  facet_grid(TYPE ~ ., scales = "free_y", space = "free") +
+  labs(
+    title = "Perfil de Famílias CYP por Espécie",
+    x = "Espécie",
+    y = "Subfamília CYP"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11, face = "bold"),
+    axis.text.y = element_text(size = 7, face = "bold"),
+    strip.text = element_text(face = "bold", size = 12, color = "white"),
+    strip.background = element_rect(fill = "grey20"),
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  )
+
+___
+_____
+
+library(tidyverse)
+library(ggplot2)
+
+# Ler e preparar os dados
+df <- read_csv("P450_2025.csv")
+names(df) <- c("TYPE", "CYP_subfamily", "A_thaliana", "I_puberulus", "S_bicolor")
+
+# Transformar para formato longo
+df_long <- df %>%
+  pivot_longer(
+    cols = c(A_thaliana, I_puberulus, S_bicolor),
+    names_to = "Species", 
+    values_to = "Count"
+  ) %>%
+  filter(Count > 0)  # Apenas valores positivos
+
+# Criar clans baseado na sua especificação
+df_long <- df_long %>%
+  mutate(clan = case_when(
+    CYP_subfamily == 51 ~ "CYP51 clan",
+    CYP_subfamily %in% c(71, 73, 75, 76, 78, 79, 81, 83, 84, 89, 98, 703, 705, 706) ~ "CYP71 clan",
+    CYP_subfamily %in% c(72, 709, 714, 715, 734, 735) ~ "CYP72 clan",
+    CYP_subfamily %in% c(74) ~ "CYP74 clan",
+    CYP_subfamily %in% c(85, 88, 90, 707, 716, 722, 724) ~ "CYP85 clan",
+    CYP_subfamily %in% c(86, 94, 96, 704) ~ "CYP86 clan",
+    CYP_subfamily %in% c(97) ~ "CYP97 clan",
+    CYP_subfamily %in% c(710) ~ "CYP710 clan",
+    CYP_subfamily %in% c(711) ~ "CYP711 clan",
+    TRUE ~ paste0("CYP", CYP_subfamily)
+  ))
+
+# Paleta de cores para os clans CYP
+clan_colors <- c(
+  "CYP51 clan" = "#1F77B4",    "CYP71 clan" = "#FF7F0E",   
+  "CYP72 clan" = "#2CA02C",    "CYP74 clan" = "#D62728",    
+  "CYP85 clan" = "#9467BD",    "CYP86 clan" = "#8C564B",    
+  "CYP97 clan" = "#E377C2",    "CYP710 clan" = "#7F7F7F",   
+  "CYP711 clan" = "#BCBD22",   "CYP701" = "#17BECF",        
+  "CYP702" = "#FF9896",        "CYP708" = "#C5B0D5",        
+  "CYP712" = "#C49C94",        "CYP713" = "#F7B6D2",        
+  "CYP718" = "#DBDB8D",        "CYP719" = "#9EDAE5",        
+  "CYP720" = "#FFBB78",        "CYP721" = "#98DF8A",        
+  "CYP723" = "#D62728",        "CYP725" = "#FF9896",        
+  "CYP726" = "#C5B0D5",        "CYP727" = "#C49C94",        
+  "CYP728" = "#F7B6D2",        "CYP729" = "#DBDB8D",        
+  "CYP730" = "#9EDAE5",        "CYP731" = "#FFBB78",        
+  "CYP732" = "#98DF8A",        "CYP733" = "#D62728",        
+  "CYP736" = "#FF9896"
+)
+
+# Gráfico com MÁXIMO ESPAÇAMENTO entre bolinhas
+ggplot(df_long, aes(x = Species, y = as.factor(CYP_subfamily), 
+                    color = clan, size = Count)) +
+  geom_point(alpha = 0.8) +
+  scale_color_manual(
+    values = clan_colors,
+    name = "Clan CYP"
+  ) +
+  scale_size_continuous(
+    range = c(2, 6),  # TAMANHO REDUZIDO para evitar encostar
+    name = "Número de Genes",
+    breaks = c(1, 5, 10, 25, 50)
+  ) +
+  facet_grid(TYPE ~ ., scales = "free_y", space = "free") +
+  labs(
+    title = "Distribuição de Famílias CYP por Clan",
+    x = "Espécie",
+    y = "Subfamília CYP"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11, face = "bold"),
+    axis.text.y = element_text(size = 6, face = "bold", 
+                              margin = margin(r = 30),  # MÁXIMO espaçamento
+                              lineheight = 5),        # Espaçamento entre linhas
+    strip.text = element_text(face = "bold", size = 12, 
+                             margin = margin(b = 25)),   # Mais espaço abaixo
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    panel.spacing.y = unit(3.5, "lines"),  # Espaço máximo entre facets
+    plot.margin = margin(30, 30, 30, 30),  # Margens máximas
+    legend.text = element_text(size = 9)
+  ) +
+  # EXPANSÃO MÁXIMA do eixo Y para criar mais espaço vertical
+  scale_y_discrete(expand = expansion(mult = c(0.5, 0.5)))
+
+# Salvar com ALTURA MÁXIMA
+ggsave("CYP_clan_max_spacing.png", 
+       width = 16, 
+       height = 24,  # ALTURA MÁXIMA para mais espaçamento
+       dpi = 300,
+       bg = "white")
+
+
+       bg = "white")
+____
