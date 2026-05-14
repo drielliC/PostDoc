@@ -1,0 +1,34 @@
+ SIF=/home/dcanal/SIF/bismark_v0.21.0.sif
+ INDIR=~/Pitcairnia/bismark_output_all/deduplicated
+ OUTDIR=~/Pitcairnia/extraction/CpG_context/all_contexts
+ GENOME=~/Pitcairnia/reference_genome/
+
+for BAM in "$INDIR"/ITA_*.deduplicated.bam; do     SAMPLE=$(basename "$BAM" .bam);     echo ">> [$(date +%H:%M:%S)] Processando: $SAMPLE"     singularity exec "$SIF" bismark_methylation_extractor         --multicore 3         --comprehensive         --bedGraph         --CX         --cytosine_report         --report         --genome_folder "$GENOME"         --output "$OUTDIR"         "$BAM"     echo ">> [$(date +%H:%M:%S)] Concluído: $SAMPLE"; done
+
+______________________
+SIF=/home/dcanal/SIF/bismark_v0.21.0.sif
+INDIR=~/Pitcairnia/bismark_output_all/deduplicated
+OUTDIR=~/Pitcairnia/extraction/CpG_context/all_contexts
+GENOME=~/Pitcairnia/reference_genome/
+
+mkdir -p "$OUTDIR"
+
+for BAM in "$INDIR"/URC_*.deduplicated.bam; do
+    SAMPLE=$(basename "$BAM" .bam)
+
+    echo ">> [$(date +%H:%M:%S)] Processando: $SAMPLE"
+
+    singularity exec "$SIF" bismark_methylation_extractor \
+        --multicore 3 \
+        --comprehensive \
+        --bedGraph \
+        --CX \
+        --cytosine_report \
+        --report \
+        --genome_folder "$GENOME" \
+        --output "$OUTDIR" \
+        "$BAM"
+
+    echo ">> [$(date +%H:%M:%S)] Concluído: $SAMPLE"
+done
+______________________________
