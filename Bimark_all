@@ -32,3 +32,49 @@ for BAM in "$INDIR"/URC_*.deduplicated.bam; do
     echo ">> [$(date +%H:%M:%S)] Concluído: $SAMPLE"
 done
 ______________________________
+
+
+Observação crítica sobre seu VCF
+Olha o ALT (coluna 5) das linhas que você me mostrou:
+Psta1   13384   .   A   .   181.78  ...
+Psta1   13385   .   A   .   183.34  ...
+Psta1   13387   .   C   .   183.04  ...
+O ALT está como . — ou seja, essas linhas representam posições não-variantes (são "invariant sites" / "monomorphic blocks", típicos de um VCF gerado com --include-non-variant-sites no GATK). Não são SNPs de verdade.
+Os SNPs reais estão misturados nesse arquivo, e por isso seus CT_SNPs.txt / GA_SNPs.txt têm ~3.5 milhões de linhas cada (número plausível para SNPs em um genoma vegetal, mas vamos confirmar).
+Como o filtro original foi cut -f1,2 (sem mostrar o ALT), você não consegue saber pelos .txt se foi feita a filtragem correta. Bora regerar do VCF para garantir.
+Comando para regerar os BEDs corretamente
+bashcd ~/Pitcairnia/SNP/VCFfiles
+
+# C → T SNPs em BED válido (0-based, half-open)
+grep -v "^#" Psta_output_variants_noindels_minQ30.recode.vcf | \
+  awk 'BEGIN{OFS="\t"} $4=="C" && $5=="T" {print $1, $2-1, $2}' \
+  > SNPs_CT.bed
+
+# G → A SNPs em BED válido (0-based, half-open)
+grep -v "^#" Psta_output_variants_noindels_minQ30.recode.vcf | \
+  awk 'BEGIN{OFS="\t"} $4=="G" && $5=="A" {print $1, $2-1, $2}' \
+  > SNPs_GA.bed
+Validação obrigatória depois de rodar
+bash# 1) Conferir formato (deve ter 3 colunas, end = start+1)
+head SNPs_CT.bed
+head SNPs_GA.bed
+
+# 2) Contar linhas — devem bater (ou ser próximas) com seus .txt antigos
+wc -l SNPs_CT.bed SNPs_GA.bed CT_SNPs.txt GA_SNPs.txt
+
+# 3) Conferência cruzada: posições do BED devem ser as mesmas dos .txt
+awk '{print $1"\t"$3}' SNPs_CT.bed | head
+head CT_SNPs.txt
+# As linhas devem ser idênticas — coluna 3 do BED é a posição 1-based original
+Se o wc -l dos .bed bater com o dos .txt, ótimo, está tudo coerente. Se der número muito diferente, me avise — pode ser que o filtro original tenha usado outro critério no ALT (algum formato multi-alélico).
+Passo seguinte (ordenar e combinar)
+Depois de validar:
+bash# Ordenar (bedtools exige BED ordenado para algumas operações; bom hábito sempre)
+sort -k1,1 -k2,2n SNPs_CT.bed > SNPs_CT.sorted.bed
+sort -k1,1 -k2,2n SNPs_GA.bed > SNPs_GA.sorted.bed
+
+# Combinar em um único arquivo para filtrar tudo de uma vez
+cat SNPs_CT.sorted.bed SNPs_GA.sorted.bed | sort -k1,1 -k2,2n > SNPs_all.sorted.bed
+
+wc -l SNPs_all.sorted.bed
+Roda os comandos do regerar BED e depois a validação, e me cola a saída do wc -l e head — daí confirmamos que está tudo certo antes de você partir pro bedtools subtract no arquivo de cobertura.
