@@ -78,3 +78,7 @@ cat SNPs_CT.sorted.bed SNPs_GA.sorted.bed | sort -k1,1 -k2,2n > SNPs_all.sorted.
 
 wc -l SNPs_all.sorted.bed
 Roda os comandos do regerar BED e depois a validação, e me cola a saída do wc -l e head — daí confirmamos que está tudo certo antes de você partir pro bedtools subtract no arquivo de cobertura.
+
+
+_______________________________________________________________________________________
+
