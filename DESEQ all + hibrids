@@ -1,0 +1,136 @@
+# Quantificação de expressão gênica em *Pitcairnia* (parentais + híbridos)
+
+Este documento descreve os parâmetros e a execução do `featureCounts` usado para
+gerar a matriz de contagens de RNA-seq do projeto, incluindo amostras parentais
+(*P. albiflos* e *P. staminea*) em alopatria e simpatria, e amostras híbridas
+(F1 e backcrosses).
+
+## Software
+
+| Ferramenta | Versão | Função |
+|---|---|---|
+| STAR | (mapeamento prévio) | Alinhamento contra genoma de referência *P. staminea* |
+| Subread / featureCounts | v2.1.1 | Quantificação por gene |
+| SLURM | (gerenciador de fila) | Submissão de jobs |
+
+## Anotação utilizada
+
+- **Arquivo:** `Psta-Annotation.gtf`
+- **Formato:** GTF
+- **Total de features:** 310,382
+- **Meta-features (genes):** 33,022
+- **Cromossomos/contigs:** 178
+
+## Parâmetros do featureCounts
+
+```bash
+featureCounts \
+    -a Psta-Annotation.gtf \
+    -o gene_counts_with_hybrids.txt \
+    -T 8 \
+    -p --countReadPairs \
+    -s 2 \
+    <BAMs...>
+```
+
+| Parâmetro | Valor | Descrição |
+|---|---|---|
+| `-a` | `Psta-Annotation.gtf` | Arquivo de anotação |
+| `-T` | `8` | Número de threads |
+| `-p` | (flag) | Bibliotecas paired-end |
+| `--countReadPairs` | (flag) | Conta pares de reads (não reads individuais) |
+| `-s` | `2` | Stranded reverse (típico de Illumina TruSeq Stranded) |
+| `-t` | `exon` (default) | Tipo de feature usado para contagem |
+| `-g` | `gene_id` (default) | Atributo que agrupa features em meta-features |
+
+**Notas sobre os defaults:**
+- Multi-mapping reads **não** são contados
+- Multi-overlapping reads **não** são contados
+- Sobreposição mínima: 1 base
+
+## Composição amostral
+
+Total: **59 amostras** distribuídas em:
+
+| Grupo | N | Localidade | Descrição |
+|---|---|---|---|
+| CHA (staminea alopátrica) | 13 | Chácara (CHA) | *P. staminea* fora da zona de simpatria |
+| PBO (outgroup) | 5 | Pão de Açúcar (PBO) | Outgroup / referência |
+| URC_ALB (albiflos simpátrica) | 4 | Urca (URC) | *P. albiflos* em simpatria |
+| CHA simpátrica | 5 | Pedra do Chá (CHA720*, CHA749C-I) | Indivíduos em simpatria |
+| ITA (albiflos alopátrica) | 8 | Itatiaia (ITA) | *P. albiflos* fora da zona de simpatria |
+| URC_STA (staminea simpátrica) | 9 | Urca (URC) | *P. staminea* em simpatria |
+| Híbridos F1 | 7 | Urca (URC) | F1 entre as duas espécies |
+| Híbridos BC_ALB | 4 | Urca (URC) | Backcross com *albiflos* |
+| Híbridos BC_STA | 4 | Urca/Chá | Backcross com *staminea* |
+
+## Submissão SLURM
+
+Script: [`featureCounts_all_samples.sh`](featureCounts_all_samples.sh)
+
+```bash
+sbatch featureCounts_all_samples.sh
+```
+
+Recursos solicitados: 8 CPUs, 16GB RAM, 12h de walltime (uso real: ~30 min).
+
+## Resultados — métricas de qualidade
+
+### Tempo de execução
+- **Início:** 22 Mai 2026, 05:35 BRT
+- **Fim:** 22 Mai 2026, 06:06 BRT
+- **Duração:** ~30 minutos
+
+### Taxa de atribuição (Assigned %)
+
+| Faixa | N amostras | Interpretação |
+|---|---|---|
+| ≥ 89% | 38 | Excelente |
+| 87–89% | 16 | Muito boa |
+| 85–87% | 4 | Boa |
+| 83–85% | 1 (URC007) | Aceitável |
+
+Média geral: **~88.5%**. Compatível com RNA-seq de boa qualidade em planta
+com biblioteca stranded.
+
+### Profundidade de sequenciamento
+
+A maioria das amostras tem ~30M de alinhamentos totais. Algumas amostras têm
+profundidade reduzida (~19-27M), incluindo alguns híbridos. DESeq2 corrige isso
+via size factors, mas vale considerar nas análises:
+
+| Amostra | Total alignments | Grupo |
+|---|---|---|
+| CHA737B | 19.3M | CHA alopátrica |
+| ITA705 | 19.8M | ITA alopátrica |
+| URC002 | 21.8M | URC_STA |
+| URC223 | 25.6M | BC_ALB |
+| URC726B | 19.5M | F1 |
+| URC734D | 27.6M | F1 |
+| URC736 | 21.8M | BC_STA |
+
+### Reads não atribuídos
+
+Apenas duas categorias com contagens não-zero:
+
+- **Unassigned_MultiMapping** (~1.5-2M por amostra): reads multi-mapeados,
+  esperado em genoma com TEs/famílias gênicas
+- **Unassigned_NoFeatures** (~1-2M por amostra): reads em regiões intergênicas
+  ou em transcritos não anotados
+
+## Output
+
+- **Matriz de contagens:** `gene_counts_with_hybrids.txt`
+- **Summary:** `gene_counts_with_hybrids.txt.summary`
+
+A primeira linha do arquivo de contagens contém o comando completo usado,
+preservando a reprodutibilidade.
+
+## Comparação com run anterior
+O comando reproduz **exatamente** os parâmetros do `featureCounts` original
+(executado apenas nas amostras parentais), apenas adicionando os 15 BAMs dos
+híbridos ao final da lista. Isso garante:
+
+1. Comparabilidade direta com a matriz anterior
+2. Normalização única (size factors estimados conjuntamente no DESeq2)
+3. Eliminação de batch effects entre runs separados de quantificação
