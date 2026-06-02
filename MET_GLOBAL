@@ -1,0 +1,71 @@
+Arquivos usados
+Entrada:
+ CX_report.txt (ou .txt.gz) gerado pelo Bismark via bismark_methylation_extractor --CX --cytosine_report. Um arquivo por amostra.
+samples.tsv mapeando: nome da amostra → grupo experimental → caminho do CX.
+
+Formato do CX_report (7 colunas, TAB-separated, sem cabeçalho):
+col	nome	conteúdo
+1	chrom	cromossomo (ex: Psta7)
+2	pos	posição da C (1-based)
+3	strand	+ ou -
+4	count_M	reads que viram a C metilada
+5	count_U	reads que viram a C não-metilada
+6	context	CG, CHG ou CHH
+7	trinuc	trinucleotídeo (ex: CGA)
+
+Saída:
+
+ meth_global.tsv (tabela longa, uma linha por amostra × janela × contexto)
+
+Como a metilação é calculada
+A unidade é janela genômica de 100 kb (não citosina individual, não TE). Para cada janela e cada contexto, em cada amostra:
+methylation (%) = 100 × Σ count_M / Σ (count_M + count_U)
+Ou seja, média ponderada das citosinas dentro da janela. Citosinas com mais cobertura pesam mais — estatisticamente correto, evita que uma C medida 3 vezes tenha o mesmo peso de uma C medida 50 vezes.
+⚠️ Não é média aritmética de porcentagens (que seria "média de razões", estatisticamente errado para esse tipo de dado).
+Média aritmética: todos os valores pesam igual ("dá a mesma importância pra cada C")
+Média ponderada: cada valor é multiplicado por um peso ("dá mais importância pra Cs com mais reads")
+Exemplo concretoImagina uma janela genômica com 3 citosinas que você mediu:Creads metiladasreads não-metiladascoberturametilaçãoC1901010090%C2551050%C30220%Média aritméticaTrata cada porcentagem como um número independente, sem olhar quantos reads geraram cada uma:(90% + 50% + 0%) / 3 = 46,7%Média ponderada (o que o script usa)Soma os reads metilados e divide pelo total de reads:sum_M     = 90 + 5 + 0   = 95   reads metiladas
+sum_total = 100 + 10 + 2 = 112  reads totais
+methylation = 100 × 95 / 112    = 84,8%Os dois métodos dão respostas bem diferentes: 46,7% vs 84,8%.
+
+Filtros aplicados, em ordem
+Etapa	Filtro	Valor padrão	Justificativa
+1	Cobertura mínima por citosina	count_M + count_U ≥ 3	Estatística não-confiável com 1-2 reads. Mesmo valor do paper das frutas.
+2	Citosinas mínimas por janela	≥ 4 Cs cobertas por janela/contexto	Janelas com pouquíssimas Cs medidas dão metilação ruidosa.
+
+Janelas que não passam em qualquer um dos filtros são descartadas — não viram ponto no violino.
+Granularidade
+    Janela: 100 kb (pos // 100000 * 100000 → toda C entre 100000 e 199999 vai pra mesma janela 100000)
+    Cromossomo: respeitado (não cruza fronteiras de cromossomo)
+    Contexto: separado em CG, CHG e CHH (3 painéis na figura final)
+
+Pooled — cada janela vira um ponto por grupo. As 5 amostras de ALB_PBO da mesma janela X são fundidas: soma count_M das 5, soma count_M+count_U das 5, calcula razão. Mostra metilação típica do grupo, mas perde variação entre amostras.
+
+Per_sample — cada janela contribui um ponto por amostra. Janela X em ALB_PBO vira 5 pontos diferentes. Mostra variação individual, mas amostras com mais cobertura dominam.
+O que o pipeline NÃO faz
+    ❌ Não mascara SNPs entre espécies (você tem SNPs_all.sorted.bed mas não está sendo usado)
+    ❌ Não usa anotação de TEs/genes (é metilação genômica global, não por feature)
+    ❌ Não corrige por replicas biológicas (modelo misto, etc) — assume Cs/janelas como independentes
+    ❌ Não normaliza profundidade entre amostras
+    ❌ Não usa o .bismark.cov.gz (que tem nomes de scaffold corretos) — usa só o CX_report
+
+samples.tsv (lista de amostras)
+    │
+    ▼
+para cada amostra:
+    abre CX_report (em chunks de 5M linhas)
+        │
+        ▼
+    para cada chunk:
+        filtra C com coverage >= 3
+        atribui window_start = (pos // 100000) * 100000
+        agrega por (chrom, window, context):
+            sum_M, sum_total, n_C_covered
+        │
+        ▼
+    consolida chunks (segunda agregação)
+    filtra janelas com >= 4 Cs cobertas
+    calcula methylation = 100 * sum_M / sum_total
+    │
+    ▼
+junta todas as amostras → TSV final
