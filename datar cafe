@@ -1,0 +1,88 @@
+Pipeline completo — copie e rode em ordem
+Etapa 1 — Gerar a lista dos ortogrupos single copy:
+bashcd /home/paecyo/area/DBV/LAB-EEGP/Clarisse_Palma/Pitcairnia_flammea/WGS_Paulo/Genomas/All_assemblies/Palb_Sta/Orthofinder/OrthoFinder/Results_Jul11/
+
+ls Single_Copy_Orthologue_Sequences/ | sed 's/\.fa$//' > single_copy_list.txt
+
+wc -l single_copy_list.txt  # quantos genes?
+Etapa 2 — Copiar só os alinhamentos correspondentes:
+bashmkdir -p single_copy_alignments
+
+while read og; do
+    if [ -f "MultipleSequenceAlignments/${og}.fa" ]; then
+        cp "MultipleSequenceAlignments/${og}.fa" single_copy_alignments/
+    else
+        echo "AVISO: $og não encontrado em MultipleSequenceAlignments"
+    fi
+done < single_copy_list.txt
+
+ls single_copy_alignments/ | wc -l  # deve ser igual ao wc -l acima
+
+O if/else é importante — avisa se algum ortogrupo não tiver alinhamento correspondente.
+
+Etapa 3 — Rodar IQ-TREE com concatenação:
+bashiqtree2 -p single_copy_alignments/ \
+  --prefix single_copy_tree \
+  -o Tillandsia_fasciculata \
+  -nt 15 \
+  -B 1000 \
+  --redo
+  
+Solução: renomear as sequências para o prefixo da espécie
+Você precisa padronizar os headers para ficarem assim em todos os arquivos:
+>Acos
+>MARCOL
+>Palb
+>Psta
+>RANCOL
+>Tfas
+
+Script para fazer isso em todos os 10126 arquivos
+bashmkdir -p single_copy_alignments_renamed
+
+mkdir -p single_copy_alignments_renamed
+
+for f in single_copy_alignments/*.fa; do
+    og=$(basename "$f")
+    sed 's/>Acos_primary[^ ]*/>Acos/g;
+         s/>MARCOL-[^ ]*/>MARCOL/g;
+         s/>Palb-[^ ]*/>Palb/g;
+         s/>Psta-[^ ]*/>Psta/g;
+         s/>RANCOL-[^ ]*/>RANCOL/g;
+         s/>Tfas_[^ ]*/>Tfas/g' "$f" > "single_copy_alignments_renamed/$og"
+done
+
+Verificar se funcionou
+bashgrep ">" single_copy_alignments_renamed/OG0012216.fa
+grep ">" single_copy_alignments_renamed/OG0014714.fa
+Os dois devem mostrar exatamente:
+>Acos
+>MARCOL
+>Palb
+>Psta
+>RANCOL
+>Tfas
+
+/tmp/iqtree2 \
+  -p single_copy_alignments_renamed/ \
+  --prefix single_copy_tree \
+  -o Tfas \
+  -nt 10 \
+  -B 1000
+  
+  cat > /tmp/iqtree_run/DATE_file_renamed.txt << 'EOF'
+mrca(MARCOL,RANCOL)	-0.3
+mrca(Psta,Palb)	-4.7
+mrca(Acos,MARCOL,RANCOL,Psta,Palb)	-14
+mrca(Tfas,Acos,MARCOL,RANCOL,Psta,Palb)	-16
+EOF
+
+    
+  /tmp/iqtree2 \
+  -t /tmp/iqtree_run/single_copy_tree.treefile \
+  --date /tmp/iqtree_run/DATE_file_renamed.txt \
+  --tree-fix \
+  -o Tfas \
+  -T 10 \
+  --prefix /tmp/iqtree_run/single_copy_dated \
+  --redo
