@@ -25,8 +25,7 @@ bashiqtree2 -p single_copy_alignments/ \
   --redo
   
 #Solução: renomear as sequências para o prefixo da espécie
-
-Precisa padronizar os headers para ficarem assim em todos os arquivos:
+#Precisa padronizar os headers para ficarem assim em todos os arquivos:
 >Acos
 >MARCOL
 >Palb
@@ -34,11 +33,9 @@ Precisa padronizar os headers para ficarem assim em todos os arquivos:
 >RANCOL
 >Tfas
 
-Script para fazer isso em todos os 10126 arquivos
+#Script para fazer isso em todos os 10126 arquivos
 bashmkdir -p single_copy_alignments_renamed
-
 mkdir -p single_copy_alignments_renamed
-
 for f in single_copy_alignments/*.fa; do
     og=$(basename "$f")
     sed 's/>Acos_primary[^ ]*/>Acos/g;
@@ -49,7 +46,7 @@ for f in single_copy_alignments/*.fa; do
          s/>Tfas_[^ ]*/>Tfas/g' "$f" > "single_copy_alignments_renamed/$og"
 done
 
-Verificar se funcionou
+#Verificar se funcionou
 bashgrep ">" single_copy_alignments_renamed/OG0012216.fa
 grep ">" single_copy_alignments_renamed/OG0014714.fa
 Os dois devem mostrar exatamente:
@@ -67,14 +64,17 @@ Os dois devem mostrar exatamente:
   -nt 10 \
   -B 1000
   
-  cat > /tmp/iqtree_run/DATE_file_renamed.txt << 'EOF'
+#####################ATENCION PICKPOKET Date files : Eu rodei com as datas abaixo porém deu erro !!!!!!
+/tmp/iqtree_run/DATE_file_renamed.txt << 'EOF'
 mrca(MARCOL,RANCOL)	-0.3
 mrca(Psta,Palb)	-4.7
 mrca(Acos,MARCOL,RANCOL,Psta,Palb)	-14
 mrca(Tfas,Acos,MARCOL,RANCOL,Psta,Palb)	-16
-EOF
 
-    
+O QUE DEU CERTO FOI USAR APENAS O ROOT -22
+cat /tmp/iqtree_run/DATE_file_nodes.txt
+ROOT	-22
+   
   /tmp/iqtree2 \
   -t /tmp/iqtree_run/single_copy_tree.treefile \
   --date /tmp/iqtree_run/DATE_file_renamed.txt \
