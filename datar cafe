@@ -1,13 +1,10 @@
-Pipeline completo — copie e rode em ordem
-Etapa 1 — Gerar a lista dos ortogrupos single copy:
+1) Gerar a lista dos ortogrupos single copy:
 bashcd /home/paecyo/area/DBV/LAB-EEGP/Clarisse_Palma/Pitcairnia_flammea/WGS_Paulo/Genomas/All_assemblies/Palb_Sta/Orthofinder/OrthoFinder/Results_Jul11/
-
 ls Single_Copy_Orthologue_Sequences/ | sed 's/\.fa$//' > single_copy_list.txt
-
 wc -l single_copy_list.txt  # quantos genes?
-Etapa 2 — Copiar só os alinhamentos correspondentes:
-bashmkdir -p single_copy_alignments
 
+2) Copiar só os alinhamentos correspondentes:
+bashmkdir -p single_copy_alignments
 while read og; do
     if [ -f "MultipleSequenceAlignments/${og}.fa" ]; then
         cp "MultipleSequenceAlignments/${og}.fa" single_copy_alignments/
@@ -17,10 +14,9 @@ while read og; do
 done < single_copy_list.txt
 
 ls single_copy_alignments/ | wc -l  # deve ser igual ao wc -l acima
+#O if/else é importante — avisa se algum ortogrupo não tiver alinhamento correspondente.
 
-O if/else é importante — avisa se algum ortogrupo não tiver alinhamento correspondente.
-
-Etapa 3 — Rodar IQ-TREE com concatenação:
+3) Rodar IQ-TREE com concatenação:
 bashiqtree2 -p single_copy_alignments/ \
   --prefix single_copy_tree \
   -o Tillandsia_fasciculata \
@@ -28,8 +24,9 @@ bashiqtree2 -p single_copy_alignments/ \
   -B 1000 \
   --redo
   
-Solução: renomear as sequências para o prefixo da espécie
-Você precisa padronizar os headers para ficarem assim em todos os arquivos:
+#Solução: renomear as sequências para o prefixo da espécie
+
+Precisa padronizar os headers para ficarem assim em todos os arquivos:
 >Acos
 >MARCOL
 >Palb
