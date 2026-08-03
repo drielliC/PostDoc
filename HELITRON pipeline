@@ -1,0 +1,39 @@
+1. Diagnóstico — não modifica nada, só mostra o estado dos arquivos.
+bash
+cd ~/enzo/Varani/curadoria_manual/dri
+bash 
+Olhe: quantos headers têm _inv, se a anotação tem five_prime_UTR/three_prime_UTR, e quantos genes se perderiam sem harmonizar. Me mande essa saída.
+
+2. Harmonização de nomes
+bash
+bash palb_01_prepare.sh names
+Tira o _inv do FASTA e testa se scfN→scaffold_N ajuda (aplica só se reduzir o número de ausentes). Aborta se sobrar qualquer nome sem par ou qualquer feature ultrapassando o fim da sequência.
+
+3. Filtro de isoforma
+bash
+bash palb_01_prepare.sh isoform
+Mesmo critério do staminea: maior CDS, desempate por comprimento de éxon e depois por ID. Confira que exons por gene fica em ~5–7 e que genes = mRNAs.
+
+4. Análise principal
+bash
+bash palb_02_pipeline.sh
+Exclui genes sobrepostos a TEs, roda o BLASTN, agrupa hits em fragmentos, classifica single/multiple, calcula promotores e composição, e imprime os controles.
+
+5. Composição por éxon
+bash
+bash palb_03_composition.sh
+
+6. Estatística
+bash
+Rscript matched_background_generic.R Palb
+Rscript helitron_wilcox.R Palb_exon_lengths.tsv Palb_exon_counts.tsv Palb
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cd ~/enzo/Varani/curadoria_manual/dri
+ls -la ~/enzo/Psta.fa          # confirme o caminho primeiro
+bash psta2_01_prepare.sh diagnose
+bash psta2_01_prepare.sh names 
+bash psta2_01_prepare.sh isoform
+ bash Psta2_02_pipeline.sh
+bash palb_03_composition.sh
