@@ -1,0 +1,134 @@
+cd /scratch/lucasalx/dri/mapped_albiflos/
+
+GNU nano 8.4                                                                                  index_genome.slurm                                                                                           
+#!/bin/bash
+#SBATCH --job-name=STARindex
+#SBATCH --output=STARindex.out
+#SBATCH --error=STARindex.err
+#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=40G
+
+# Se o cluster usa modules, descomente:
+# module load STAR
+
+# Caminhos
+GENOME_FASTA=/scratch/lucasalx/te_pipeline/data/genome/Palb_ref.noinv.fasta
+GTF=/scratch/lucasalx/te_pipeline/data/gene_annotation$ Palb-Annotation-HQ.gff3 
+OUTDIR=/scratch/lucasalx/dri/mapped_albiflos/
+
+mkdir -p $OUTDIR
+
+# Comando de indexação STAR
+STAR \
+  --runThreadN 8 \
+  --runMode genomeGenerate \
+  --genomeDir $OUTDIR \
+  --genomeFastaFiles $GENOME_FASTA \
+  --sjdbGTFfile $GTF \
+  --sjdbOverhang 99
+
+__________________________________________________________________
+
+
+
+GNU nano 8.4                                                                                       STAR2.sh                                                                                                
+#!/bin/bash
+#SBATCH --job-name=alinhamento_star
+#SBATCH -p general
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task 16
+#SBATCH --mem=8G
+#SBATCH --output=alinhamento.out
+#SBATCH --error=alinhamento.err
+#SBATCH --mail-user=seuemail@unicamp.br
+
+# Caminho para os FASTQ
+input_dir="/scratch/lucasalx"
+
+# Saída do STAR
+output_dir="OUTDIR=/scratch/lucasalx/dri/mapped_albiflos/"
+
+# Genoma indexado
+genome_dir="/scratch/lucasalx/dri/mapped_albiflos"
+
+mkdir -p ${output_dir}
+
+# Loop para FASTQ não comprimidos
+for f in $(ls ${input_dir}/*RNA_1.fastq | sed 's/RNA_1.fastq//' | sort -u)
+do
+  base_name=$(basename $f)
+
+  echo "Processando par: ${base_name}RNA_1.fastq e ${base_name}RNA_2.fastq"
+
+  STAR --genomeDir ${genome_dir} \
+       --readFilesIn ${input_dir}/${base_name}RNA_1.fastq ${input_dir}/${base_name}RNA_2.fastq \
+       --outSAMtype BAM SortedByCoordinate \
+       --outFileNamePrefix ${output_dir}/${base_name}_ \
+       --runThreadN $SLURM_CPUS_PER_TASK \
+       --outFilterMultimapNmax 1 \
+       --winAnchorMultimapNmax 50 \
+       --outFilterMismatchNmax 2 \
+       --alignSJoverhangMin 8 \
+       --alignSJDBoverhangMin 5 \
+       --alignIntronMin 20 \
+       --alignIntronMax 10000 \
+       --alignMatesGapMax 10000
+done
+
+_________________________
+
+  GNU nano 8.4                                                                                     Star2_v2.sh                                                                                               
+#!/bin/bash
+#SBATCH --job-name=alinhamento_star_v2
+#SBATCH -p general
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=80G
+#SBATCH --output=alinhamento_v2.out
+#SBATCH --error=alinhamento_v2.err
+#SBATCH --mail-user=seuemail@unicamp.br
+
+# Caminho para os FASTQ
+input_dir="/scratch/lucasalx"
+
+# Saída do STAR
+output_dir="/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/mapped_two"
+
+# Genoma indexado
+genome_dir="/home/lucasalx@bio.ib.unicamp.br/amanda/rnaseq/saida_STAR_index"
+
+# GFF com gene_id (gerado pelo script Python)
+gff_file="/home/lucasalx@bio.ib.unicamp.br/amanda/sintenia/P_staminea_inv_geneid.gff"
+
+mkdir -p ${output_dir}
+
+# Loop para FASTQ não comprimidos — sequencial para não sobrecarregar memória
+for f in $(ls ${input_dir}/*RNA_1.fastq | sed 's/RNA_1.fastq//' | sort -u)
+do
+  base_name=$(basename $f)
+  echo "[$(date)] Processando: ${base_name}"
+
+  STAR --genomeDir ${genome_dir} \
+       --readFilesIn ${input_dir}/${base_name}RNA_1.fastq ${input_dir}/${base_name}RNA_2.fastq \
+       --sjdbGTFfile ${gff_file} \
+       --sjdbGTFfeatureExon exon \
+       --sjdbGTFtagExonParentTranscript Parent \
+       --outSAMtype BAM SortedByCoordinate \
+       --outFileNamePrefix ${output_dir}/${base_name}_ \
+       --runThreadN 8 \
+       --limitBAMsortRAM 40000000000 \
+       --outBAMsortingBinsN 100 \
+       --outFilterMultimapNmax 1 \
+       --winAnchorMultimapNmax 50 \
+       --outFilterMismatchNmax 2 \
+       --alignSJoverhangMin 8 \
+       --alignSJDBoverhangMin 5 \
+       --alignIntronMin 20 \
+       --alignIntronMax 10000 \
+       --alignMatesGapMax 10000
+
+  echo "[$(date)] Finalizado: ${base_name}"
+done
+
+
