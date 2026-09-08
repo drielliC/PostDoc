@@ -132,3 +132,429 @@ do
 done
 
 
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file Palb-Annotation.gtf ...                               ||
+||    Features : 309468                                                       ||
+||    Meta-features : 30144                                                   ||
+||    Chromosomes/contigs : 41                                                ||
+||                                                                            ||
+|| Process BAM file CHA720D__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28045249                                             ||
+||    Successfully assigned alignments : 26475728 (94.4%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA720E__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27829354                                             ||
+||    Successfully assigned alignments : 26390928 (94.8%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA720F__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27874470                                             ||
+||    Successfully assigned alignments : 26315353 (94.4%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA720G__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28535024                                             ||
+||    Successfully assigned alignments : 26710098 (93.6%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA737A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28704548                                             ||
+||    Successfully assigned alignments : 27360181 (95.3%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA737B__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17614603                                             ||
+||    Successfully assigned alignments : 16517754 (93.8%)                     ||
+||    Running time : 0.15 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA738__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27608886                                             ||
+||    Successfully assigned alignments : 25529703 (92.5%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA742__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28720485                                             ||
+||    Successfully assigned alignments : 27304703 (95.1%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA742B__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28569155                                             ||
+||    Successfully assigned alignments : 27215060 (95.3%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA744__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28363615                                             ||
+||    Successfully assigned alignments : 26850732 (94.7%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA745A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28920027                                             ||
+||    Successfully assigned alignments : 27694828 (95.8%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA746__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28783383                                             ||
+||    Successfully assigned alignments : 27120079 (94.2%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA747__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28374535                                             ||
+||    Successfully assigned alignments : 26898553 (94.8%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA748A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28288955                                             ||
+||    Successfully assigned alignments : 26967919 (95.3%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA748B__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28862663                                             ||
+||    Successfully assigned alignments : 27399878 (94.9%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA749B__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27957928                                             ||
+||    Successfully assigned alignments : 26350897 (94.3%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA749C__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27532222                                             ||
+||    Successfully assigned alignments : 25710212 (93.4%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA749F__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27825869                                             ||
+||    Successfully assigned alignments : 26404422 (94.9%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA749G__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27860906                                             ||
+||    Successfully assigned alignments : 26395268 (94.7%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA749I__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28135153                                             ||
+||    Successfully assigned alignments : 26718960 (95.0%)                     ||
+||    Running time : 0.29 minutes                                             ||
+||                                                                            ||
+|| Process BAM file CHA750__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28549460                                             ||
+||    Successfully assigned alignments : 27360065 (95.8%)                     ||
+||    Running time : 0.30 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA689__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28050820                                             ||
+||    Successfully assigned alignments : 26705812 (95.2%)                     ||
+||    Running time : 0.31 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA691A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28519692                                             ||
+||    Successfully assigned alignments : 27047071 (94.8%)                     ||
+||    Running time : 0.30 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA693A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 25669694                                             ||
+||    Successfully assigned alignments : 24525844 (95.5%)                     ||
+||    Running time : 0.31 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA696__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 23106526                                             ||
+||    Successfully assigned alignments : 22262029 (96.3%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA698__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27846389                                             ||
+||    Successfully assigned alignments : 26630459 (95.6%)                     ||
+||    Running time : 0.31 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA699C__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28058932                                             ||
+||    Successfully assigned alignments : 26775547 (95.4%)                     ||
+||    Running time : 0.27 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA703A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27951099                                             ||
+||    Successfully assigned alignments : 26223038 (93.8%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file ITA705__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17400483                                             ||
+||    Successfully assigned alignments : 16340439 (93.9%)                     ||
+||    Running time : 0.18 minutes                                             ||
+||                                                                            ||
+|| Process BAM file PBO670__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28142264                                             ||
+||    Successfully assigned alignments : 26603421 (94.5%)                     ||
+||    Running time : 0.30 minutes                                             ||
+||                                                                            ||
+|| Process BAM file PBO674A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27251423                                             ||
+||    Successfully assigned alignments : 26075470 (95.7%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file PBO675__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28132822                                             ||
+||    Successfully assigned alignments : 26915440 (95.7%)                     ||
+||    Running time : 0.28 minutes                                             ||
+||                                                                            ||
+|| Process BAM file PBO677__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28451569                                             ||
+||    Successfully assigned alignments : 26506741 (93.2%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file PBO678__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28249210                                             ||
+||    Successfully assigned alignments : 26889354 (95.2%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC002__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19509266                                             ||
+||    Successfully assigned alignments : 18110276 (92.8%)                     ||
+||    Running time : 0.17 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC006__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27444307                                             ||
+||    Successfully assigned alignments : 25219791 (91.9%)                     ||
+||    Running time : 0.23 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC007__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 25164172                                             ||
+||    Successfully assigned alignments : 23516054 (93.5%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC014__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28555846                                             ||
+||    Successfully assigned alignments : 26839087 (94.0%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC014A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27582503                                             ||
+||    Successfully assigned alignments : 26110918 (94.7%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC015__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27781556                                             ||
+||    Successfully assigned alignments : 26472556 (95.3%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC021__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27542246                                             ||
+||    Successfully assigned alignments : 25897929 (94.0%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC106__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28883397                                             ||
+||    Successfully assigned alignments : 27439773 (95.0%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC108__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27985474                                             ||
+||    Successfully assigned alignments : 26487634 (94.6%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC110__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28817819                                             ||
+||    Successfully assigned alignments : 27399281 (95.1%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC111__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28289170                                             ||
+||    Successfully assigned alignments : 26322303 (93.0%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC131__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27889304                                             ||
+||    Successfully assigned alignments : 25965971 (93.1%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC201__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28429704                                             ||
+||    Successfully assigned alignments : 27159376 (95.5%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC215__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28557131                                             ||
+||    Successfully assigned alignments : 27019697 (94.6%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC218__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28223006                                             ||
+||    Successfully assigned alignments : 26663125 (94.5%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC219__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27924583                                             ||
+||    Successfully assigned alignments : 25997326 (93.1%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC223__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 21388705                                             ||
+||    Successfully assigned alignments : 20372082 (95.2%)                     ||
+||    Running time : 0.19 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC725__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 27613503                                             ||
+||    Successfully assigned alignments : 26194420 (94.9%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC726B__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17134995                                             ||
+||    Successfully assigned alignments : 15732168 (91.8%)                     ||
+||    Running time : 0.14 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC728__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 26853508                                             ||
+||    Successfully assigned alignments : 25610579 (95.4%)                     ||
+||    Running time : 0.24 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC731__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28250742                                             ||
+||    Successfully assigned alignments : 26463297 (93.7%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC732__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28122257                                             ||
+||    Successfully assigned alignments : 26595333 (94.6%)                     ||
+||    Running time : 0.25 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC734A__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 28898918                                             ||
+||    Successfully assigned alignments : 27240930 (94.3%)                     ||
+||    Running time : 0.26 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC734D__Aligned.sortedByCoord.out.bam...                 ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 25290705                                             ||
+||    Successfully assigned alignments : 23176991 (91.6%)                     ||
+||    Running time : 0.22 minutes                                             ||
+||                                                                            ||
+|| Process BAM file URC736__Aligned.sortedByCoord.out.bam...                  ||
+||    Strand specific : reversely stranded                                    ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 19633122                                             ||
+||    Successfully assigned alignments : 17920268 (91.3%)                     ||
+||    Running time : 0.16 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+Failed to create file /scratch/lucasalx/dri/mapped_albiflos/mapped_alb/counts
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+|| Summary of counting results can be found in file "/scratch/lucasalx/dri/m  ||
+|| apped_albiflos/mapped_alb/counts.summary"                             
