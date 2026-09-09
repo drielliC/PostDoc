@@ -558,3 +558,74 @@ Failed to create file /scratch/lucasalx/dri/mapped_albiflos/mapped_alb/counts
 ||                                                                            ||
 || Summary of counting results can be found in file "/scratch/lucasalx/dri/m  ||
 || apped_albiflos/mapped_alb/counts.summary"                             
+
+
+
+###############################Para cada localidade rodar primeiro o PCA e o Cluster para verificar se precisa retirar ou manter as amostras
+
+cat run_pcas.sh 
+
+#!/bin/bash
+#SBATCH --job-name=DESeq2_HIB
+#SBATCH -p general
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=4:00:00
+#SBATCH --output=/scratch/lucasalx/dri/mapped_albiflos/mapped_alb/Pca_allo_%j.out
+#SBATCH --error=/scratch/lucasalx/dri/mapped_albiflos/mapped_alb/Pca_allo%j.err
+
+source /scratch/lucasalx/miniconda3/bin/activate /scratch/lucasalx/envs/te_pipeline
+
+Rscript /scratch/lucasalx/dri/mapped_albiflos/mapped_alb/Pca_hclust_urca.R
+#############################saída
+=== DEFININDO METADADOS ===
+        condition
+URC106   ALB_URCA
+URC108   ALB_URCA
+URC131   ALB_URCA
+URC725   ALB_URCA
+URC002   STA_URCA
+URC006   STA_URCA
+URC007   STA_URCA
+URC014   STA_URCA
+URC014A  STA_URCA
+URC015   STA_URCA
+URC021   STA_URCA
+URC731   STA_URCA
+URC732   STA_URCA
+
+=== CRIANDO OBJETO DESeq2 ===
+Genes antes da filtragem: 30144 
+Genes após filtragem: 18990 
+
+=== GERANDO PCA ===
+null device 
+          1 
+PCA salvo em: /scratch/lucasalx/dri/mapped_albiflos/urca_results/PCA_albiflos_vs_staminea_urca.pdf 
+Coordenadas numéricas salvas em: /scratch/lucasalx/dri/mapped_albiflos/urca_results/pca_coords_urca.csv 
+
+=== GERANDO CLUSTER HIERÁRQUICO ===
+null device 
+          1 
+Cluster hierárquico salvo em: /scratch/lucasalx/dri/mapped_albiflos/urca_results/hclust_albiflos_vs_staminea_urca.pdf 
+
+Alocação por cutree(k=2):
+         sample cluster condition_esperada
+URC106   URC106       1           ALB_URCA
+URC108   URC108       1           ALB_URCA
+URC131   URC131       1           ALB_URCA
+URC725   URC725       1           ALB_URCA
+URC002   URC002       2           STA_URCA
+URC006   URC006       2           STA_URCA
+URC007   URC007       2           STA_URCA
+URC014   URC014       2           STA_URCA
+URC014A URC014A       2           STA_URCA
+URC015   URC015       2           STA_URCA
+URC021   URC021       2           STA_URCA
+URC731   URC731       2           STA_URCA
+URC732   URC732       2           STA_URCA
+
+=== CONCLUÍDO ===
+
+######################Depois roadar o script do DEseq após retirar amostras outliers
