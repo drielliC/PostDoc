@@ -629,3 +629,259 @@ URC732   URC732       2           STA_URCA
 === CONCLUÍDO ===
 
 ######################Depois roadar o script do DEseq após retirar amostras outliers
+#!/usr/bin/env Rscript
+
+# =============================================================================
+# Expressão Diferencial - Simpátricas URCA: ALB_URCA vs STA_URCA
+# =============================================================================
+
+library(DESeq2)
+library(dplyr)
+library(ggplot2)
+library(pheatmap)
+library(apeglm)  # necessário para lfcShrink(type = "apeglm")
+
+outdir <- "/scratch/lucasalx/dri/mapped_albiflos/urca_results"
+dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+
+# -----------------------------------------------------------------------------
+# ETAPA 1: CARREGAMENTO DOS DADOS
+# -----------------------------------------------------------------------------
+cat("=== CARREGANDO DADOS ===\n")
+
+raw <- read.delim("/scratch/lucasalx/dri/mapped_albiflos/mapped_alb/counts.txt", comment.char="#")
+cat("Dimensões da matriz bruta:", dim(raw), "\n")
+
+counts <- raw[, 7:ncol(raw)]
+rownames(counts) <- raw$Geneid
+
+# Limpar nomes das colunas (versão robusta: cobre com/sem sufixo _Aligned,
+# e caminhos convertidos em pontos pelo read.delim)
+cn <- colnames(counts)
+cn <- sub("_+Aligned.*$", "", cn)
+cn <- sub(".*[./]", "", cn)
+colnames(counts) <- cn
+
+cat("Amostras disponíveis:\n")
+print(colnames(counts))
+
+# -----------------------------------------------------------------------------
+# ETAPA 2: SELECIONAR SIMPÁTRICAS URCA (P. albiflos vs P. staminea puros,
+# excluindo híbridos F1 e backcross que também têm código URC)
+# -----------------------------------------------------------------------------
+cat("\n=== SELECIONANDO AMOSTRAS URCA ===\n")
+
+albiflos_samples <- c("URC106", "URC108", "URC131", "URC725")
+staminea_samples <- c("URC002", "URC006", "URC007", "URC014", "URC014A",
+                       "URC015", "URC021", "URC731", "URC732")
+
+# Verificar quais estão disponíveis
+albiflos_found <- intersect(albiflos_samples, colnames(counts))
+staminea_found <- intersect(staminea_samples, colnames(counts))
+
+cat("\nALB_URCA encontradas:", length(albiflos_found), "\n")
+print(albiflos_found)
+cat("STA_URCA encontradas:", length(staminea_found), "\n")
+print(staminea_found)
+
+# Amostras não encontradas
+missing_alb <- setdiff(albiflos_samples, colnames(counts))
+missing_sta <- setdiff(staminea_samples, colnames(counts))
+
+if(length(missing_alb) > 0) {
+    cat("\nAVISO - ALB não encontradas:\n")
+    print(missing_alb)
+}
+if(length(missing_sta) > 0) {
+    cat("\nAVISO - STA não encontradas:\n")
+    print(missing_sta)
+}
+
+if(length(albiflos_found) < 2 | length(staminea_found) < 2) {
+    stop("ERRO: Amostras insuficientes para análise!")
+}
+
+selected_samples <- c(albiflos_found, staminea_found)
+counts_urca <- counts[, selected_samples]
+
+cat("\nTotal de amostras na análise:", ncol(counts_urca), "\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 3: METADADOS
+# -----------------------------------------------------------------------------
+cat("\n=== DEFININDO METADADOS ===\n")
+
+coldata <- data.frame(
+    condition = factor(
+        c(rep("ALB_URCA", length(albiflos_found)),
+          rep("STA_URCA", length(staminea_found))),
+        levels = c("ALB_URCA", "STA_URCA")
+    ),
+    row.names = selected_samples
+)
+
+print(coldata)
+
+# -----------------------------------------------------------------------------
+# ETAPA 4: OBJETO DESEQ2 E FILTRAGEM
+# -----------------------------------------------------------------------------
+cat("\n=== CRIANDO OBJETO DESEQ2 ===\n")
+
+dds <- DESeqDataSetFromMatrix(
+    countData = counts_urca,
+    colData = coldata,
+    design = ~condition
+)
+
+cat("Genes antes da filtragem:", nrow(dds), "\n")
+keep <- rowSums(counts(dds) >= 10) >= 3
+dds <- dds[keep, ]
+cat("Genes após filtragem:", nrow(dds), "\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 5: ANÁLISE DIFERENCIAL
+# -----------------------------------------------------------------------------
+cat("\n=== EXECUTANDO DESEQ2 ===\n")
+
+dds <- DESeq(dds)
+
+cat("\nCoeficientes disponíveis para lfcShrink:\n")
+print(resultsNames(dds))
+# Deve mostrar algo como: "Intercept" "condition_STA_URCA_vs_ALB_URCA"
+
+res <- results(dds,
+               contrast = c("condition", "STA_URCA", "ALB_URCA"),
+               alpha = 0.05)
+
+# --- LFC SHRINKAGE ---
+# padj não muda (vem do teste de Wald original em `res`); só o log2FoldChange
+# é ajustado para ser mais estável, especialmente relevante com 9 vs 4 amostras.
+res <- lfcShrink(dds,
+                  coef = "condition_STA_URCA_vs_ALB_URCA",
+                  res  = res,
+                  type = "apeglm")
+
+res <- res[order(res$padj), ]
+
+summary(res)
+
+sig <- subset(res, padj < 0.05 & abs(log2FoldChange) > 1)
+cat("\nGenes significativos (padj<0.05, |LFC|>1):", nrow(sig), "\n")
+cat("Upregulados em STA_URCA:", sum(sig$log2FoldChange > 0, na.rm=TRUE), "\n")
+cat("Downregulados em STA_URCA:", sum(sig$log2FoldChange < 0, na.rm=TRUE), "\n")
+
+# -----------------------------------------------------------------------------
+# ETAPA 6: TABELA FORMATADA DE DEGs
+# -----------------------------------------------------------------------------
+cat("\n=== GERANDO TABELA DE DEGs ===\n")
+
+gff_file <- "/scratch/lucasalx/dri/mapped/allo_results/Psta-Annotation-HQ.gff3"
+
+deg_table <- as.data.frame(sig) %>%
+    tibble::rownames_to_column("gene_id") %>%
+    mutate(
+        regulation = ifelse(log2FoldChange > 0, "up_STA_URCA", "down_STA_URCA"),
+        log2FoldChange = round(log2FoldChange, 3),
+        baseMean = round(baseMean, 1),
+        padj = formatC(padj, format = "e", digits = 2),
+        pvalue = formatC(pvalue, format = "e", digits = 2)
+    ) %>%
+    arrange(padj)
+
+if(file.exists(gff_file)) {
+    cat("Adicionando anotação funcional do GFF3...\n")
+    gff <- read.delim(gff_file, header = FALSE, comment.char = "#",
+                      col.names = c("chr","source","type","start","end",
+                                    "score","strand","phase","attributes"))
+
+    genes_gff <- gff %>%
+        filter(type == "gene") %>%
+        mutate(
+            gene_id = gsub(".*ID=([^;]+).*", "\\1", attributes),
+            description = ifelse(grepl("description=", attributes),
+                                 gsub(".*description=([^;]+).*", "\\1", attributes), NA)
+        ) %>%
+        select(gene_id, description)
+
+    deg_table <- deg_table %>% left_join(genes_gff, by = "gene_id")
+} else {
+    deg_table$description <- NA
+}
+
+deg_table <- deg_table %>%
+    select(gene_id, description, regulation, baseMean,
+           log2FoldChange, pvalue, padj)
+
+cat("Total de DEGs:", nrow(deg_table), "\n")
+print(head(deg_table, 10))
+
+# -----------------------------------------------------------------------------
+# ETAPA 7: GRÁFICOS
+# -----------------------------------------------------------------------------
+cat("\n=== GERANDO GRÁFICOS ===\n")
+
+vsd <- vst(dds)
+
+p_pca <- plotPCA(vsd, intgroup = "condition") +
+    theme_minimal() +
+    scale_color_manual(values = c("ALB_URCA" = "steelblue",
+                                  "STA_URCA" = "firebrick3")) +
+    labs(title = "PCA - Urca: ALB_URCA vs STA_URCA")
+
+ggsave(file.path(outdir, "pca_urca.png"), p_pca, width = 8, height = 6)
+
+df_vol <- as.data.frame(res) %>%
+    mutate(significant = !is.na(padj) & padj < 0.05 & abs(log2FoldChange) > 1)
+
+p_vol <- ggplot(df_vol, aes(x = log2FoldChange, y = -log10(padj),
+                             color = significant)) +
+    geom_point(size = 0.5, alpha = 0.6) +
+    scale_color_manual(values = c("grey70", "firebrick3")) +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
+    geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue") +
+    theme_minimal() +
+    labs(title = "Volcano Plot - Urca: STA_URCA vs ALB_URCA",
+         x = "log2 Fold Change", y = "-log10(adjusted p-value)")
+
+ggsave(file.path(outdir, "volcano_urca.png"), p_vol, width = 8, height = 6)
+
+annotation_col <- data.frame(
+    Condition = coldata$condition,
+    row.names = rownames(coldata)
+)
+
+top_genes <- head(rownames(res[!is.na(res$padj), ]), 50)
+mat_top <- assay(vsd)[top_genes, ]
+
+png(file.path(outdir, "heatmap_top50_urca.png"), width = 1200, height = 800)
+pheatmap(mat_top, scale = "row",
+         annotation_col = annotation_col,
+         color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+         main = "Top 50 Genes - Urca: STA_URCA vs ALB_URCA",
+         fontsize = 8)
+dev.off()
+
+# -----------------------------------------------------------------------------
+# ETAPA 8: SALVAR RESULTADOS
+# -----------------------------------------------------------------------------
+write.csv(as.data.frame(res), file.path(outdir, "DEGs_urca_completo.csv"))
+write.csv(deg_table, file.path(outdir, "DEGs_urca_tabela_formatada.csv"),
+          row.names = FALSE)
+write.csv(counts(dds, normalized = TRUE),
+          file.path(outdir, "contagens_normalizadas_urca.csv"))
+write.csv(coldata, file.path(outdir, "metadados_urca.csv"))
+
+cat("\n=== ANÁLISE CONCLUÍDA ===\n")
+cat("Amostras analisadas:", ncol(dds), "\n")
+cat("ALB_URCA:", sum(coldata$condition == "ALB_URCA"), "amostras\n")
+cat("STA_URCA:", sum(coldata$condition == "STA_URCA"), "amostras\n")
+cat("Genes diferenciais:", nrow(sig), "\n")
+cat("Resultados salvos em:", outdir, "\n")
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+___________________________
+todos scripts usados estão em 
+/scratch/lucasalx/dri/mapped_albiflos/mapped_alb
+
+deseq2_allo.R  deseq2_cha.R   deseq2_urca.R 
