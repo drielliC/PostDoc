@@ -943,3 +943,62 @@ todos scripts usados estão em
 /scratch/lucasalx/dri/mapped_albiflos/mapped_alb
 
 deseq2_allo.R  deseq2_cha.R   deseq2_urca.R 
+
+
+
+
+ENRIQUECIMENTO
+
+(te_pipeline) lucasalx@srv-slurm-mgmt:/scratch/lucasalx/dri/mapped/RESULTADOS$ python3 add_go_to_description.py \
+    --gtf /scratch/lucasalx/dri/mapped/RESULTADOS/Psta-Annotation.gtf \
+    --csv /scratch/lucasalx/dri/mapped/RESULTADOS/allo_results/DEGs_alo_tabela_formatada.csv \
+    --out genes_go.csv \
+    --background-prefix /scratch/lucasalx/dri/mapped/RESULTADOS/allo_results/staminea
+[GTF] Genes totais (feature 'gene'): 33022
+[GTF] Genes com >=1 GO term: 18253
+[CSV] Linhas processadas: 3232
+[CSV] Preenchidas com GO term(s): 2058
+[CSV] Sem GO term (gene existe no GTF): 1174
+[CSV] gene_id não encontrado no GTF: 0
+[BACKGROUND] 3189 GO terms únicos -> /scratch/lucasalx/dri/mapped/RESULTADOS/allo_results/staminea_GO_terms_unicos.txt
+[BACKGROUND] Mapeamento gene->GO (33022 genes) -> /scratch/lucasalx/dri/mapped/RESULTADOS/allo_results/staminea_gene_to_GO.tsv
+Concluído.
+
+python3 add_go_to_description.py --gtf /scratch/lucasalx/dri/mapped/RESULTADOS/Psta-Annotation.gtf --csv /scratch/lucasalx/dri/mapped/RESULTADOS/urca_results/DEGs_urca_tabela_formatada.csv --out /scratch/lucasalx/dri/mapped/RESULTADOS/urca_results/DEGs_urca_tabela_formatada_to_GO.csv  --background-prefix /scratch/lucasalx/dri/mapped/RESULTADOS/urca_results/
+[GTF] Genes totais (feature 'gene'): 33022
+[GTF] Genes com >=1 GO term: 18253
+[CSV] Linhas processadas: 2975
+[CSV] Preenchidas com GO term(s): 1885
+[CSV] Sem GO term (gene existe no GTF): 1090
+[CSV] gene_id não encontrado no GTF: 0
+[BACKGROUND] 3189 GO terms únicos -> /scratch/lucasalx/dri/mapped/RESULTADOS/urca_results/_GO_terms_unicos.txt
+[BACKGROUND] Mapeamento gene->GO (33022 genes) -> /scratch/lucasalx/dri/mapped/RESULTADOS/urca_results/_gene_to_GO.tsv
+Concluído.
+
+RESULTADOS/cha_results/
+[GTF] Genes totais (feature 'gene'): 33022
+[GTF] Genes com >=1 GO term: 18253
+[CSV] Linhas processadas: 3204
+[CSV] Preenchidas com GO term(s): 1898
+[CSV] Sem GO term (gene existe no GTF): 1306
+[CSV] gene_id não encontrado no GTF: 0
+[BACKGROUND] 3189 GO terms únicos -> /scratch/lucasalx/dri/mapped/RESULTADOS/cha_results/_GO_terms_unicos.txt
+[BACKGROUND] Mapeamento gene->GO (33022 genes) -> /scratch/lucasalx/dri/mapped/RESULTADOS/cha_results/_gene_to_GO.tsv
+Concluído.
+
+(base) lucasalx@srv-slurm-mgmt:/scratch/lucasalx/dri/mapped/RESULTADOS/urca_hybrid_results$ python3 add_go_to_description.py --gtf /scratch/lucasalx/dri/mapped/RESULTADOS/Psta-Annotation.gtf --csv DEGs_HYB_vs_ALB_significativos.csv --out DEGs_HYB_vs_ALB_com_GO.csv 
+[GTF] Genes totais (feature 'gene'): 33022
+[GTF] Genes com >=1 GO term: 18253
+[CSV] Linhas processadas: 459
+[CSV] Preenchidas com GO term(s): 263
+[CSV] Sem GO term (gene existe no GTF): 196
+[CSV] gene_id não encontrado no GTF: 0
+Concluído.
+(base) lucasalx@srv-slurm-mgmt:/scratch/lucasalx/dri/mapped/RESULTADOS/urca_hybrid_results$ python3 add_go_to_description.py --gtf /scratch/lucasalx/dri/mapped/RESULTADOS/Psta-Annotation.gtf --csv DEGs_HYB_vs_STA_significativos.csv --out DEGs_HYB_vs_STA_com_GO.csv 
+[GTF] Genes totais (feature 'gene'): 33022
+[GTF] Genes com >=1 GO term: 18253
+[CSV] Linhas processadas: 997
+[CSV] Preenchidas com GO term(s): 596
+[CSV] Sem GO term (gene existe no GTF): 401
+[CSV] gene_id não encontrado no GTF: 0
+Concluído.
