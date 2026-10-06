@@ -1,0 +1,54 @@
+First prepare your data:
+
+PLAST=~/area/DBV/LAB-EEGP/plastoma
+mkdir -p $PLAST/00_raw/hifi
+
+cat > $PLAST/barcodes.tsv << 'EOF'
+bc2008 URC111
+bc2009 URC223
+bc2010 URC207
+bc2011 URC015
+bc2012 URC102
+bc2013 CHA720D
+bc2014 CHA749K
+bc2015 CHA720E
+bc2016 CHA744
+EOF
+
+cat $PLAST/barcodes.tsv   # confere se ficou certo
+
+cd ~/area/DBV/LAB-EEGP/hifi_reads
+while read bc s; do
+  echo "Convertendo $bc -> $s"
+  samtools fastq -@ 8 m84082_250722_142758_s4.hifi_reads.${bc}.bam \
+    | gzip > $PLAST/00_raw/hifi/${s}.hifi.fq.gz
+done < $PLAST/barcodes.tsv
+
+______________________________
+cd ~/area/DBV/LAB-EEGP/plastoma
+git clone https://github.com/c-zhou/OatkDB.git
+ls OatkDB/
+___________________
+seqkit stats -a 00_raw/hifi/URC111.hifi.fq.gz
+___________________
+conda activate oatk
+cd ~/area/DBV/LAB-EEGP/plastoma
+mkdir -p 01_oatk/URC111 tmp
+
+nohup oatk -k 1001 -c 150 -t 16 \
+  -p OatkDB/v20230921/embryophyta_pltd.fam \
+  -m OatkDB/v20230921/embryophyta_mito.fam \
+  -T tmp \
+  -o 01_oatk/URC111/URC111 \
+  00_raw/hifi/URC111.hifi.fq.gz > 01_oatk/URC111/URC111.log 2>&1 &
+
+Opção	O que faz
+-k 1001	Tamanho do k-mer usado para construir o grafo de montagem. K-mers longos como esse só são possíveis porque os reads HiFi são longos e muito precisos. Eles ajudam a atravessar repetições, que são o principal problema na montagem de organelas. 1001 é o valor padrão da sua versão.
+-c 150	Cobertura mínima de k-mer: k-mers que aparecem menos de 150 vezes são descartados. Este é o filtro que separa organela de núcleo. Como há muitas cópias do plastoma por célula, os k-mers plastidiais têm cobertura muito maior que os nucleares, e o grafo resultante fica praticamente só com sequências de organela.
+-t 16	Número de threads (núcleos de processamento).
+-p ...pltd.fam	Banco de perfis HMM de genes plastidiais de plantas terrestres. O Oatk usa o nhmmscan para procurar esses genes nos segmentos do grafo e decidir quais pertencem ao plastoma.
+-m ...mito.fam	O mesmo, para genes mitocondriais. Com os dois bancos, o Oatk tenta separar plastoma e mitogenoma na mesma rodada.
+-T tmp	Diretório para arquivos temporários durante a anotação.
+-o 01_oatk/URC111/URC111	Prefixo dos arquivos de saída. Os arquivos serão criados em 01_oatk/URC111/ com nomes começando por URC111.
+Na etapa final (Pathfinder), o Oatk procura no grafo o caminho que melhor representa cada organela. Pelos padrões mostrados na ajuda, ele prefere um caminho circular desde que este cubra pelo menos 90% da sequência (-f 0.90).
+
