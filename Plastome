@@ -57,3 +57,62 @@ Opção	O que faz
 -o 01_oatk/URC111/URC111	Prefixo dos arquivos de saída. Os arquivos serão criados em 01_oatk/URC111/ com nomes começando por URC111.
 Na etapa final (Pathfinder), o Oatk procura no grafo o caminho que melhor representa cada organela. Pelos padrões mostrados na ajuda, ele prefere um caminho circular desde que este cubra pelo menos 90% da sequência (-f 0.90).
 
+______________________________________
+##Montar os plastomas com dados  Illumina
+get_organelle_from_reads.py -h | grep -A4 -E "max-reads|reduce-reads"
+
+# GetOrganelle já limita a entrada: para plastomas (-F embplant_pt), ele usa no máximo 15 milhões de reads por arquivo.
+
+ILL=~/area/DBV/LAB-EEGP/Clarisse_Palma/P_staminea_albiflos/Download100823_Marilia_WGS/HN00198661
+cd ~/area/DBV/LAB-EEGP/plastoma
+mkdir -p 05_getorganelle
+
+nohup get_organelle_from_reads.py \
+  -1 $ILL/URC111_1.fastq.gz -2 $ILL/URC111_2.fastq.gz \
+  -F embplant_pt -R 15 -k 21,45,65,85,105 -t 16 \
+  -o 05_getorganelle/URC111 > 05_getorganelle/URC111.log 2>&1 &
+
+_________________________________________________
+Depois siga os passos 2 e 3 da mensagem anterior. Primeiro, no ct-gpu-02:
+
+bash
+mkdir -p ~/PLASTOME/05_teste_illumina
+
+Depois, no vm-pesq-DBV-Paulo:
+
+bash
+cd ~/area/DBV/LAB-EEGP/plastoma
+scp 05_getorganelle/URC111/embplant_pt.K105.complete.graph1.1.path_sequence.fasta \
+  cpalma@143.106.232.182:~/PLASTOME/05_teste_illumina/URC111ill.pltd.ctg.fasta
+
+E, de novo no ct-gpu-02:
+
+bash
+cd ~/PLASTOME
+conda activate oatk
+python3 padroniza.py 01_oatk/URC111/URC111.pltd.ctg.fasta 05_teste_illumina \
+  05_teste_illumina/URC111ill.pltd.ctg.fasta
+
+seqkit seq -s 05_teste_illumina/URC111.std.fasta    | tr -d '\n' | md5sum
+seqkit seq -s 05_teste_illumina/URC111ill.std.fasta | tr -d '\n' | md5sum
+___________________________________
+cd ~/area/DBV/LAB-EEGP/plastoma
+
+cat > roda_getorg.sh << 'EOF'
+#!/bin/bash
+s=$1
+ILL=~/area/DBV/LAB-EEGP/Clarisse_Palma/P_staminea_albiflos/Download100823_Marilia_WGS/HN00198661
+out=05_getorganelle/$s
+if ls $out/*complete*path_sequence.fasta >/dev/null 2>&1; then
+  echo "$s já pronto"; exit 0
+fi
+rm -rf $out
+echo "$(date) início $s"
+get_organelle_from_reads.py -1 $ILL/${s}_1.fastq.gz -2 $ILL/${s}_2.fastq.gz \
+  -F embplant_pt -R 15 -k 21,45,65,85,105 -t 5 \
+  -o $out > 05_getorganelle/$s.log 2>&1
+echo "$(date) fim $s"
+EOF
+
+chmod +x roda_getorg.sh
+ls -l roda_getorg.sh
