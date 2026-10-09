@@ -1,3 +1,8 @@
+O plastoma tem uma estrutura quase universal (LSC–IR–SSC–IR), então dá para checar "está igual ao esperado?". 
+Mitogenomas de angiospermas variam muito em tamanho, de centenas de kb a vários Mb, e costumam ter repetições que recombinam. 
+Por isso existem na célula como várias conformações ou moléculas, não como um círculo único. 
+Uma montagem "boa" de mito pode ser um grafo com vários caminhos possíveis, e não uma sequência circular única. 
+ 
 First prepare your data:
 
 PLAST=~/area/DBV/LAB-EEGP/plastoma
