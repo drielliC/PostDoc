@@ -1,0 +1,86 @@
+####install programs
+####check 
+
+for t in samtools bwa minimap2 mash seqkit jellyfish bbsplit.sh; do
+  printf "%-12s" "$t"; command -v $t || echo "FALTANDO"
+done
+
+#samtools    /usr/bin/samtools
+#bwa         FALTANDO
+#minimap2    FALTANDO
+#mash        FALTANDO
+#seqkit      /usr/bin/seqkit
+#jellyfish   FALTANDO
+#bbsplit.sh  FALTANDO
+
+conda install -n methylkit -c conda-forge -c bioconda --dry-run \
+  samtools bwa minimap2 mash seqkit jellyfish bbmap
+
+conda install -n methylkit -c conda-forge -c bioconda \
+  samtools bwa minimap2 mash seqkit jellyfish bbmap
+conda activate methylkit
+bwa    # deve mostrar a versão
+
+conda activate methylkit
+bwa 2>&1 | head -3        # mostra a versão
+jellyfish --version       # deve mostrar 2.x
+bbsplit.sh --version      # pode imprimir bastante coisa; só confirma que existe
+
+##########################bash preparar_referencia.sh
+  #!/usr/bin/env bash
+# preparar_referencia.sh
+# Rodar dentro de ~/Pitcairnia/reference_hibrids (onde estão Palb.fa e Psta.fa)
+#
+# O que faz:
+#   1. Estatísticas básicas de cada genoma (tamanho, nº de sequências)
+#   2. Estimativa da divergência entre Palb e Psta (minimap2; mash opcional)
+#   3. Cria a referência combinada com prefixos (Palb_ / Psta_) e indexa com bwa e samtools
+#
+# Requisitos: samtools, bwa, minimap2 (mash e seqkit são opcionais)
+# Ex.: conda install -c bioconda samtools bwa minimap2 mash seqkit
+
+set -euo pipefail
+THREADS=${THREADS:-8}
+A=Palb.fa
+B=Psta.fa
+
+for f in "$A" "$B"; do
+  [[ -s "$f" ]] || { echo "ERRO: $f não encontrado"; exit 1; }
+done
+for t in samtools bwa minimap2; do
+  command -v "$t" >/dev/null || { echo "ERRO: $t não instalado"; exit 1; }
+done
+
+echo "== 1. Estatísticas dos genomas =="
+for f in "$A" "$B"; do
+  samtools faidx "$f"
+  awk -v f="$f" '{n++; s+=$2} END{printf "%s\t%d sequências\t%.1f Mb\n", f, n, s/1e6}' "$f.fai"
+done
+command -v seqkit >/dev/null && seqkit stats -a "$A" "$B"
+
+sizeA=$(awk '{s+=$2} END{print s}' "$A.fai")
+sizeB=$(awk '{s+=$2} END{print s}' "$B.fai")
+awk -v a="$sizeA" -v b="$sizeB" 'BEGIN{
+  printf "\nProporção esperada de reads num F1 (pelo tamanho do genoma):\n  Palb %.1f%%  :  Psta %.1f%%\n\n", 100*a/(a+b), 100*b/(a+b)}'
+
+echo "== 2. Divergência entre os genomas =="
+# Alinhamento genoma x genoma; identidade = soma(bases idênticas)/soma(tamanho do bloco)
+# só em alinhamentos primários (tp:A:P). asm20 tolera divergências de alguns %.
+minimap2 -t "$THREADS" -cx asm20 "$A" "$B" > Psta_vs_Palb.paf
+awk '$0 ~ /tp:A:P/ {m+=$10; l+=$11; q+=$4-$3}
+     END{printf "Bases alinhadas (primário): %.1f Mb\nIdentidade média: %.3f%%\nDivergência aprox.: %.3f%% (~%.1f diferenças por 100 pb)\n",
+             q/1e6, 100*m/l, 100*(1-m/l), 100*(1-m/l)}' Psta_vs_Palb.paf
+
+if command -v mash >/dev/null; then
+  echo -e "\nMash (distância ~ divergência por sítio):"
+  mash dist "$A" "$B"
+fi
+
+echo -e "\n== 3. Referência combinada =="
+sed 's/^>/>Palb_/' "$A" >  combinada_Palb_Psta.fa
+sed 's/^>/>Psta_/' "$B" >> combinada_Palb_Psta.fa
+samtools faidx combinada_Palb_Psta.fa
+bwa index combinada_Palb_Psta.fa
+echo "Pronto: combinada_Palb_Psta.fa indexada."
+
+  _____________________________________________
