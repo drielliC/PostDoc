@@ -84,3 +84,47 @@ bwa index combinada_Palb_Psta.fa
 echo "Pronto: combinada_Palb_Psta.fa indexada."
 
   _____________________________________________
+cd ~/Pitcairnia/reference_hibrids
+bash preparar_referencia.sh  
+
+sed 's/^>/>Palb_/' Palb.fa >  combinada_Palb_Psta.fa
+sed 's/^>/>Psta_/' Psta.fa >> combinada_Palb_Psta.fa
+samtools faidx combinada_Palb_Psta.fa
+nohup bwa index combinada_Palb_Psta.fa > bwa_index.log 2>&1 &
+
+
+_____________________________________________
+python3 - <<'EOF'
+import re
+mm = M = ins = dele = gaps = 0
+mm_f = M_f = 0
+cig = re.compile(r'(\d+)([MID])')
+with open("Psta_vs_Palb.paf") as f:
+    for line in f:
+        if "tp:A:P" not in line: continue
+        c = line.rstrip("\n").split("\t")
+        tags = {t[:2]: t[5:] for t in c[12:]}
+        nm = int(tags["NM"])
+        m = i = d = g = 0
+        for n, op in cig.findall(tags["cg"]):
+            n = int(n)
+            if op == "M": m += n
+            elif op == "I": i += n; g += 1
+            else: d += n; g += 1
+        snp = nm - i - d                 # NM = mismatches + bases de indel
+        mm += snp; M += m; ins += i; dele += d; gaps += g
+        if int(c[11]) >= 5 and int(c[10]) >= 10000:   # MAPQ>=5 e bloco>=10 kb
+            mm_f += snp; M_f += m
+print(f"Colunas alinhadas (M): {M/1e6:.1f} Mb")
+print(f"Divergência por SNP (todas primárias):   {100*mm/M:.3f}%")
+print(f"Divergência por SNP (MAPQ>=5, >=10 kb):  {100*mm_f/M_f:.3f}%")
+print(f"Bases em inserções: {ins/1e6:.1f} Mb | deleções: {dele/1e6:.1f} Mb | nº de gaps: {gaps:,}")
+print(f"Indels por kb alinhado: {1000*gaps/M:.2f}")
+EOF
+
+_____________________________________
+# Métrica	Valor
+# Divergência por SNP	~1,6–1,7% (mash: 1,5%)
+# Indels	~2 por kb (~0,2 por 100 pb)
+# Fração alinhada em colunas M	357 Mb, cerca de 65–69% de cada genoma
+# Bases em indels	~129 Mb, provavelmente boa parte de TEs presentes/ausentes
