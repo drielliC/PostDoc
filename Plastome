@@ -116,3 +116,65 @@ EOF
 
 chmod +x roda_getorg.sh
 ls -l roda_getorg.sh
+
+____________________________________________
+##########Rodar arvore de haplótipos
+#Preparar uma tabela de haplótipos (quais amostras têm plastomas idênticos) e uma árvore de máxima verossimilhança com IQ-TREE
+1. Instalar o IQ-TREE
+bash
+conda activate oatk
+conda install -c bioconda iqtree
+which iqtree2 iqtree iqtree3 2>/dev/null
+
+2. Rótulos informativos e tabela de haplótipos
+
+Este script cria uma cópia do alinhamento com nomes no formato AMOSTRA_POP_ESP (por exemplo, CHA744_CHA_alb) e agrupa as sequências idênticas em haplótipos:
+
+bash
+cd ~/PLASTOME
+mkdir -p 08_arvore
+
+python3 - << 'EOF'
+from collections import OrderedDict
+meta = {}
+for l in open('metadados_amostras.tsv').read().splitlines()[1:]:
+    c = l.split('\t')
+    if len(c) >= 4: meta[c[0]] = c
+pop = {'Chacrinha': 'CHA', 'URC': 'URC', 'Itacoatiara': 'ITA', 'Pedra_Bonita': 'PBO'}
+esp = {'P_albiflos': 'alb', 'P_staminea': 'sta', 'hibrido': 'hib'}
+
+seqs, n = OrderedDict(), None
+for l in open('07_origem/plastomas_1IR.aln.fasta'):
+    l = l.strip()
+    if l.startswith('>'): n = l[1:].split()[0]; seqs[n] = []
+    elif l: seqs[n].append(l.upper())
+seqs = {k: ''.join(v) for k, v in seqs.items()}
+
+def rotulo(s):
+    m = meta.get(s)
+    if not m: return s + '_NA_NA'
+    return f'{s}_{pop.get(m[1], m[1])}_{esp.get(m[3], m[3])}'
+
+with open('08_arvore/aln_rotulado.fasta', 'w') as f:
+    for s, q in seqs.items():
+        f.write(f'>{rotulo(s)}\n{q}\n')
+
+# haplótipos = sequências alinhadas idênticas
+haps = OrderedDict()
+for s, q in seqs.items():
+    haps.setdefault(q, []).append(s)
+haps = sorted(haps.values(), key=len, reverse=True)
+with open('08_arvore/haplotipos.tsv', 'w') as f:
+    f.write('haplotipo\tn\tamostras\n')
+    for i, membros in enumerate(haps, 1):
+        f.write(f'H{i}\t{len(membros)}\t{" ".join(rotulo(m) for m in membros)}\n')
+print(f'{len(seqs)} sequências, {len(haps)} haplótipos distintos')
+EOF
+
+cat 08_arvore/haplotipos.tsv
+iqtree2 -s 08_arvore/aln_rotulado.fasta -m HKY+F+I -B 1000 -nm 10000 -T 4 \
+  --prefix 08_arvore/plastoma_v2 -redo
+
+#Fixei o modelo já escolhido (-m HKY+F+I) para não repetir a seleção. 
+#O -nm 10000 aumenta o limite de iterações, e o -redo permite sobrescrever arquivos de uma rodada anterior com o mesmo prefixo. 
+# Confira no final do novo log se o aviso de não convergência desapareceu. Se continuar, aumente o -nm para 20000.
