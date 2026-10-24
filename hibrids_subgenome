@@ -397,3 +397,7 @@ if (!is.na(bed_file) && file.exists(path.expand(bed_file)) &&
 message("\n=== ANÁLISE CONCLUÍDA: ", output_dir, " ===")
 print(resumo_estatistico)
 writeLines(capture.output(sessionInfo()), file.path(output_dir, "session_info.txt"))
+
+______________________________________________________________________________________
+ IN=~/met_hibrids OUT=~/met_hibrids/cov_subgenomas SUBGENOMAS=Psta CONTEXTOS=CG \
+  bash converter_para_cov.sh
