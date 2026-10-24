@@ -406,3 +406,16 @@ INV_MODE=rename DIR=~/met_hibrids/cov_subgenomas bash mascarar_snps.sh \
 ls URC_015_Psta_CpG_cov_filtrado.gz URC_732_Psta_CpG_cov_filtrado.gz    # devem existir
 
 Rscript F1_vs_parental_methylkit_7x.R Psta CpG 2>&1 | tee dmr_Psta_CpG.log
+_________________________________________________________________________________________
+conda activate methylkit
+cd ~/met_hibrids
+IN=~/met_hibrids OUT=~/met_hibrids/cov_subgenomas SUBGENOMAS=Psta CONTEXTOS="CHG CHH" \
+  bash converter_para_cov.sh
+______________________________________________________________________________________
+cd ~/met_hibrids/cov_subgenomas
+INV_MODE=rename DIR=~/met_hibrids/cov_subgenomas bash mascarar_snps.sh \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/Psta_output_variants_noindels_minQ30.recode.vcf Psta \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/SNPs_CT.sorted.bed 2>&1 | tee mascara_Psta_CH.log
+
+Rscript F1_vs_parental_methylKit.R Psta CHG 5 2>&1 | tee dmr_Psta_CHG_5x.log
+Rscript F1_vs_parental_methylKit.R Psta CHH 5 2>&1 | tee dmr_Psta_CHH_5x.log
