@@ -128,3 +128,11 @@ _____________________________________
 # Indels	~2 por kb (~0,2 por 100 pb)
 # Fração alinhada em colunas M	357 Mb, cerca de 65–69% de cada genoma
 # Bases em indels	~129 Mb, provavelmente boa parte de TEs presentes/ausentes
+_____________________________________
+conda activate methylkit
+cd ~/met_hibrids
+SNPDIR=~/met_hibrids/SNP/Pstaminea/VCFfiles
+
+# 1. converter (só Psta, CpG)
+IN=~/met_hibrids OUT=~/met_hibrids/cov_subgenomas SUBGENOMAS=Psta CONTEXTOS=CG \
+  bash converter_para_cov.sh
