@@ -136,3 +136,10 @@ SNPDIR=~/met_hibrids/SNP/Pstaminea/VCFfiles
 # 1. converter (só Psta, CpG)
 IN=~/met_hibrids OUT=~/met_hibrids/cov_subgenomas SUBGENOMAS=Psta CONTEXTOS=CG \
   bash converter_para_cov.sh
+______________________________________
+#checar o _inv e mascarar SNPs
+cd ~/met_hibrids/cov_subgenomas
+
+INV_MODE=rename DIR=~/met_hibrids/cov_subgenomas bash mascarar_snps.sh \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/Psta_output_variants_noindels_minQ30.recode.vcf Psta \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/SNPs_CT.sorted.bed 2>&1 | tee mascara_Psta.log
