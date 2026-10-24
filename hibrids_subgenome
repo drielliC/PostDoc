@@ -143,3 +143,257 @@ cd ~/met_hibrids/cov_subgenomas
 INV_MODE=rename DIR=~/met_hibrids/cov_subgenomas bash mascarar_snps.sh \
   ~/met_hibrids/SNP/Pstaminea/VCFfiles/Psta_output_variants_noindels_minQ30.recode.vcf Psta \
   ~/met_hibrids/SNP/Pstaminea/VCFfiles/SNPs_CT.sorted.bed 2>&1 | tee mascara_Psta.log
+_______________________________________________
+# F1_vs_parental_methylKit_7x.R. É o seu sim_Rscript_CpG_7x com os mesmos valores:
+#mincov 7, filterByCoverage 7 / 99,9, janelas de 1.000 pb com cov.bases = 7 e unite() padrão;
+#o mesmo filtro de regiões sem variação e calculateDiffMeth() padrão;
+#25% e q < 0,05, diffMethPerChr, heatmap e anotação com genomation.
+#As mudanças foram só as necessárias:
+#Grupos: F1 = 1 e parental = 0. Assim, hyper significa mais metilado no F1.
+#Argumentos: o script recebe o subgenoma e o contexto, para rodar as duas comparações com o mesmo arquivo.
+_____________________________________________
+# F1_vs_parental_methylKit_7x.R
+#
+# Mesmo script e mesmos parâmetros da análise ALB x STA (sim_Rscript_CpG_7x),
+# adaptado para:
+#   - F1 (subgenoma Palb) x Palb puro   -> Rscript F1_vs_parental_methylKit_7x.R Palb CpG
+#   - F1 (subgenoma Psta) x Psta puro   -> Rscript F1_vs_parental_methylKit_7x.R Psta CpG
+# (contexto pode ser CpG, CHG ou CHH)
+#
+# Parâmetros mantidos: mincov = 7, filterByCoverage(lo.count = 7, hi.perc = 99.9),
+# tiles 1000/1000 com cov.bases = 7, unite() padrão, mesmo filtro de regiões sem
+# variação, calculateDiffMeth() padrão, DMR = |diferença| >= 25% e q < 0.05,
+# anotação com genomation.
+#
+# Única mudança de desenho: treatment F1 = 1, parental = 0.
+#   hyper = mais metilado no F1 ; hypo = menos metilado no F1
+#
+# Entradas: arquivos gerados por converter_para_cov.sh
+# ATENÇÃO: os arquivos dos parentais TAMBÉM vêm do alinhamento no genoma combinado.
+# Não misture com os *_CpG_cov_filtrado antigos (alinhados a outra referência).
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+args <- commandArgs(trailingOnly = TRUE)
+SUBGENOMA <- if (length(args) >= 1) args[1] else "Palb"   # Palb ou Psta
+CONTEXTO  <- if (length(args) >= 2) args[2] else "CpG"    # CpG, CHG ou CHH
+stopifnot(SUBGENOMA %in% c("Palb", "Psta"), CONTEXTO %in% c("CpG", "CHG", "CHH"))
+
+required_packages <- c("methylKit", "ggplot2", "matrixStats", "GenomicRanges")
+for (pkg in required_packages) {
+  if (!require(pkg, character.only = TRUE, quietly = TRUE))
+    stop("Pacote não instalado: ", pkg)
+}
+
+# ---------------- AMOSTRAS ----------------
+F1 <- c("URC_211", "URC_215", "URC_218", "URC_219", "URC_726B", "URC_728")
+PAIS <- list(
+  Palb = c("URC_106", "URC_119", "URC_131", "URC_725", "URC_102"),
+  Psta = c("URC_002", "URC_004", "URC_006", "URC_015", "URC_021", "URC_732")
+)
+ROTULO_PAI <- c(Palb = "ALB", Psta = "STA")[[SUBGENOMA]]
+
+# Anotação BED12 por subgenoma (NA = sem anotação)
+ANOTACAO <- list(
+  Psta = Sys.getenv("BED_PSTA", "~/Pitcairnia/extraction/CpG_context/cov/filtrados_SNP/Psta_annotation_with_inv.bed12"),
+  Palb = NA   # <- coloque aqui o BED12 de P. albiflos, se existir
+)
+bed_file <- ANOTACAO[[SUBGENOMA]]
+
+setwd(Sys.getenv("COV_DIR", "~/Pitcairnia/F1_subgenomas_cov"))   # pasta com os *_cov_filtrado.gz
+output_dir <- paste0(CONTEXTO, "_F1_vs_", ROTULO_PAI, "_subgenoma_", SUBGENOMA, "_methylKit_imagens_7x")
+if (!dir.exists(output_dir)) dir.create(output_dir)
+
+sample.id <- c(F1, PAIS[[SUBGENOMA]])
+SUFIXO    <- "_cov_filtrado.gz"   # arquivos com SNPs mascarados (mascarar_snps.sh)
+arquivos  <- paste0(sample.id, "_", SUBGENOMA, "_", CONTEXTO, SUFIXO)
+existe    <- file.exists(arquivos)
+if (any(!existe)) message("AVISO - amostras ainda sem arquivo (ficam de fora): ",
+                          paste(sample.id[!existe], collapse = ", "))
+sample.id <- sample.id[existe]
+file.list <- as.list(arquivos[existe])
+treatment <- ifelse(sample.id %in% F1, 1, 0)
+grupo     <- ifelse(treatment == 1, "F1", ROTULO_PAI)
+message("Comparação: F1 (subgenoma ", SUBGENOMA, ") x ", ROTULO_PAI, " puro | contexto ", CONTEXTO)
+print(data.frame(sample.id, grupo))
+if (sum(treatment == 1) < 2 || sum(treatment == 0) < 2) stop("Amostras insuficientes.")
+
+# 1. LER OS ARQUIVOS DE METILAÇÃO
+message("\n1. Lendo arquivos de metilação...")
+myobj <- methRead(file.list,
+                  sample.id = as.list(sample.id),
+                  assembly = paste0("Pitcairnia_", SUBGENOMA),
+                  treatment = treatment,
+                  context = CONTEXTO,
+                  mincov = 7,
+                  pipeline = "bismarkCoverage")
+
+# 2. FILTRAGEM INICIAL - 7x COBERTURA
+message("2. Filtrando por cobertura...")
+filtered.myobj <- filterByCoverage(myobj, lo.count = 7, lo.perc = NULL,
+                                   hi.count = NULL, hi.perc = 99.9)
+
+# 3. CRIAR JANELAS (DMRs)
+message("3. Criando janelas de 1000bp...")
+tiles <- tileMethylCounts(filtered.myobj, win.size = 1000, step.size = 1000, cov.bases = 7)
+
+# 4. ESTATÍSTICAS DESCRITIVAS
+message("4. Gerando estatísticas descritivas...")
+pdf(file.path(output_dir, "distribuicao_metilacao_amostras.pdf"))
+par(mfrow = c(3, 3))
+for (i in seq(1, length(tiles))) {
+  getMethylationStats(tiles[[i]], plot = TRUE, both.strands = FALSE)
+}
+dev.off()
+
+# 5. UNIR AMOSTRAS
+message("5. Unindo amostras...")
+meth <- unite(tiles)
+message("Cromossomos presentes:")
+print(levels(as.factor(meth$chr)))
+
+# 6. ANÁLISE EXPLORATÓRIA
+message("6. Análise exploratória...")
+pm <- percMethylation(meth)
+methmeans_F1  <- rowMeans(pm[, treatment == 1])
+methmeans_PAI <- rowMeans(pm[, treatment == 0])
+methSDs_F1    <- rowSds(pm[, treatment == 1])
+methSDs_PAI   <- rowSds(pm[, treatment == 0])
+
+pdf(file.path(output_dir, "medias_variancias.pdf"))
+par(mfrow = c(2, 2))
+hist(methmeans_F1,  main = "Médias F1", xlab = "% Metilação", col = "lightblue")
+hist(methmeans_PAI, main = paste("Médias", ROTULO_PAI), xlab = "% Metilação", col = "lightgreen")
+hist(methSDs_F1,    main = "Desvio Padrão F1", xlab = "SD", col = "lightcoral")
+hist(methSDs_PAI,   main = paste("Desvio Padrão", ROTULO_PAI), xlab = "SD", col = "lightyellow")
+dev.off()
+
+# Filtrar regiões sem variação (mesmo critério da análise dos parentais)
+meth_filt <- meth[methmeans_F1 > 0 & methmeans_PAI < 100 |
+                  methmeans_PAI > 0 & methmeans_F1 < 100, ]
+message(paste("Regiões após filtragem:", nrow(meth_filt)))
+
+# 7. PCA
+message("7. Análise de PCA...")
+pdf(file.path(output_dir, "PCA.pdf"))
+PCASamples(meth_filt)
+dev.off()
+
+pca_obj  <- PCASamples(meth_filt, obj.return = TRUE)
+pca_data <- as.data.frame(pca_obj$x)
+pca_data$Group <- grupo
+cores <- setNames(c("purple", ifelse(ROTULO_PAI == "ALB", "blue", "red")), c("F1", ROTULO_PAI))
+pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point(size = 3) +
+  stat_ellipse() +
+  theme_minimal() +
+  ggtitle(paste0("PCA - F1 (subgenoma ", SUBGENOMA, ") vs ", ROTULO_PAI, " - ", CONTEXTO, " (7x)")) +
+  scale_color_manual(values = cores)
+ggsave(file.path(output_dir, "PCA_ggplot.pdf"), pca_plot)
+
+# 8. METILAÇÃO DIFERENCIAL
+message("8. Calculando metilação diferencial...")
+meth_comparison <- reorganize(meth_filt, sample.ids = sample.id, treatment = treatment)
+Diff_F1_vs_PAI <- calculateDiffMeth(meth_comparison)
+print(head(getData(Diff_F1_vs_PAI)))
+
+# 9. DMRs (25%, q < 0.05)
+message("9. Identificando DMRs (25%)...")
+Diff_25p   <- getMethylDiff(Diff_F1_vs_PAI, difference = 25, qvalue = 0.05)
+Diff_hyper <- getMethylDiff(Diff_F1_vs_PAI, difference = 25, qvalue = 0.05, type = "hyper")
+Diff_hypo  <- getMethylDiff(Diff_F1_vs_PAI, difference = 25, qvalue = 0.05, type = "hypo")
+message("DMRs totais (25%): ", nrow(getData(Diff_25p)))
+message("Hipermetiladas no F1: ", nrow(getData(Diff_hyper)))
+message("Hipometiladas no F1 (hipermetiladas em ", ROTULO_PAI, "): ", nrow(getData(Diff_hypo)))
+
+# 10. POR CROMOSSOMO
+message("10. Análise por cromossomo...")
+if (nrow(getData(Diff_F1_vs_PAI)) > 0) {
+  pdf(file.path(output_dir, "DMRs_por_cromossomo_25p.pdf"))
+  diffMethPerChr(Diff_F1_vs_PAI, plot = TRUE, qvalue.cutoff = 0.05, meth.cutoff = 25)
+  dev.off()
+}
+
+# 11. RESULTADOS
+message("11. Explorando resultados...")
+DMdata <- getData(Diff_F1_vs_PAI)
+DMdata$result <- ifelse(
+  DMdata$meth.diff > 25 & DMdata$qvalue < 0.05, "hyper",
+  ifelse(DMdata$meth.diff < -25 & DMdata$qvalue < 0.05, "hypo", "non_DM"))
+dmr_summary <- table(DMdata$result)
+print(dmr_summary)
+
+# 12. HEATMAP
+message("12. Gerando heatmap...")
+DMdata_DM <- subset(DMdata, abs(meth.diff) > 25 & qvalue < 0.05)
+DMdata_DM$index <- paste(DMdata_DM$chr, DMdata_DM$start, sep = "_")
+pm_df <- as.data.frame(percMethylation(meth_filt))
+pm_df$index <- paste(meth_filt$chr, meth_filt$start, sep = "_")
+common_indices <- intersect(DMdata_DM$index, pm_df$index)
+message(paste("Índices em comum:", length(common_indices)))
+if (length(common_indices) > 0) {
+  pm_dmrs <- pm_df[pm_df$index %in% common_indices, ]
+  pm_dmrs <- pm_dmrs[, -ncol(pm_dmrs)]
+  titulo <- paste0("DMRs - F1 vs ", ROTULO_PAI, " (subgenoma ", SUBGENOMA, ", ",
+                   CONTEXTO, ", 7x, ", nrow(pm_dmrs), " regiões)")
+  pdf(file.path(output_dir, "heatmap_DMRs.pdf"), width = 10, height = 8)
+  if (requireNamespace("pheatmap", quietly = TRUE)) {
+    pheatmap::pheatmap(as.matrix(pm_dmrs), clustering_method = "complete",
+                       show_rownames = FALSE, main = titulo)
+  } else {
+    heatmap(as.matrix(pm_dmrs), main = titulo, labRow = NA)
+  }
+  dev.off()
+}
+
+# 13. SALVAR
+message("13. Salvando resultados...")
+write.csv(DMdata, file.path(output_dir, "dados_metilacao_diferencial_completo.csv"))
+DM_signif <- subset(DMdata, result %in% c("hyper", "hypo"))
+write.csv(DM_signif, file.path(output_dir, "DMRs_significativas.csv"))
+resumo_estatistico <- data.frame(
+  Comparacao    = paste0("F1_subgenoma_", SUBGENOMA, "_vs_", ROTULO_PAI),
+  Contexto      = CONTEXTO,
+  n_F1          = sum(treatment == 1),
+  n_parental    = sum(treatment == 0),
+  Total_Regioes = nrow(DMdata),
+  DMRs_Hiper_F1 = ifelse("hyper" %in% names(dmr_summary), dmr_summary["hyper"], 0),
+  DMRs_Hipo_F1  = ifelse("hypo"  %in% names(dmr_summary), dmr_summary["hypo"], 0),
+  DMRs_Total    = sum(dmr_summary[c("hyper", "hypo")], na.rm = TRUE),
+  Coverage      = "7x")
+write.csv(resumo_estatistico, file.path(output_dir, "resumo_estatistico.csv"))
+
+# 14. ANOTAÇÃO
+message("14. Anotação de DMRs...")
+if (!is.na(bed_file) && file.exists(path.expand(bed_file)) &&
+    requireNamespace("genomation", quietly = TRUE) && nrow(getData(Diff_25p)) > 0) {
+  library(genomation)
+  gene_annotation <- readTranscriptFeatures(bed_file)
+  Diff_25p_gr <- as(Diff_25p, "GRanges")
+  dmr_annotations <- annotateWithGeneParts(Diff_25p_gr, gene_annotation)
+  print(getTargetAnnotationStats(dmr_annotations, percentage = TRUE))
+  pdf(file.path(output_dir, "anotacao_DMRs.pdf"))
+  plotTargetAnnotation(dmr_annotations,
+                       main = paste0("Anotação DMRs - F1 vs ", ROTULO_PAI, " (", CONTEXTO, ", 7x)"))
+  dev.off()
+  tss_distances <- getAssociationWithTSS(dmr_annotations)
+  write.csv(tss_distances, file.path(output_dir, "distancias_TSS.csv"))
+  pdf(file.path(output_dir, "distancias_TSS.pdf"))
+  hist(tss_distances$dist.to.feature, main = "Distância de DMRs para TSS (7x)",
+       xlab = "Distância (bp)", ylab = "Frequência", breaks = 50, col = "lightblue")
+  abline(v = c(-1000, 1000), col = "red", lty = 2, lwd = 2)
+  dev.off()
+  promoter_dmrs <- subset(tss_distances, abs(dist.to.feature) <= 1000)
+  message("DMRs em regiões promotoras (±1kb do TSS): ", nrow(promoter_dmrs))
+  if (nrow(promoter_dmrs) > 0) {
+    write.csv(promoter_dmrs, file.path(output_dir, "DMRs_promotoras.csv"))
+    writeLines(unique(promoter_dmrs$feature.name),
+               file.path(output_dir, "genes_com_DMRs_promotoras.txt"))
+  }
+} else {
+  message("Anotação pulada (sem BED12 para ", SUBGENOMA, ", sem genomation ou sem DMRs).")
+}
+
+message("\n=== ANÁLISE CONCLUÍDA: ", output_dir, " ===")
+print(resumo_estatistico)
+writeLines(capture.output(sessionInfo()), file.path(output_dir, "session_info.txt"))
