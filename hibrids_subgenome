@@ -399,5 +399,10 @@ print(resumo_estatistico)
 writeLines(capture.output(sessionInfo()), file.path(output_dir, "session_info.txt"))
 
 ______________________________________________________________________________________
- IN=~/met_hibrids OUT=~/met_hibrids/cov_subgenomas SUBGENOMAS=Psta CONTEXTOS=CG \
-  bash converter_para_cov.sh
+INV_MODE=rename DIR=~/met_hibrids/cov_subgenomas bash mascarar_snps.sh \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/Psta_output_variants_noindels_minQ30.recode.vcf Psta \
+  ~/met_hibrids/SNP/Pstaminea/VCFfiles/SNPs_CT.sorted.bed 2>&1 | tee mascara_Psta.log
+
+ls URC_015_Psta_CpG_cov_filtrado.gz URC_732_Psta_CpG_cov_filtrado.gz    # devem existir
+
+Rscript F1_vs_parental_methylkit_7x.R Psta CpG 2>&1 | tee dmr_Psta_CpG.log
