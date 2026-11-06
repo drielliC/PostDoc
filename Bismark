@@ -155,3 +155,6 @@ for f in CpG_context_*_deduplicated*.txt.gz; do
 for f in CHG_context_*_deduplicated*.txt.gz; do
   sample=${f#CHG_context_};   sample=${sample%%_align_*}   echo "CHG -> $sample";   singularity exec /home/dcanal/SIF/bismark_v0.21.0.sif     bismark2bedGraph  -CX  --dir bedgraph     -o "${sample}_CHG"     "$f"; done
 
+ ___________________________________________________________
+bedtools intersect -a URC_211_CpG.gz.bismark.cov.gz -b ../../CpG_context/cov/SNPs_CT.bed > URC_211_CpG_numero_de_filtrados
+bedtools subtract -a URC_211_CpG.gz.bismark.cov.gz -b URC_211_CpG_numero_de_filtrados > URC_211_CpG_cov_filtrado
