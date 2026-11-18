@@ -1,0 +1,10 @@
+#script abaixo pega o resultado do pipeline de EDTA + HELIANO, e junta todos os Helitrons e extrai o .fasta dos fragmentos com base na localização 
+
+~/enzo/Varani/curadoria_manual/dri/extract_fragments.sh 
+
+#contar quantos fragmentos
+~/enzo/Varani/curadoria_manual/dri/fragments_Palb$ cut -f4 Palb_fragments_all.bed | awk -F'|' '{print $1"|"$2"|"$3}' | sort -u | wc -l
+2566
+
+  ~/enzo/Varani/curadoria_manual/dri/fragments_Psta cut -f4 Psta_fragments_all.bed | awk -F'|' '{print $1"|"$2"|"$3}' | sort -u | wc -l
+11180
