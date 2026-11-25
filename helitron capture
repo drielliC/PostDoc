@@ -1,3 +1,32 @@
+Resultado do script helitron_capture_2026.sh
+
+DOADORES 
+~/enzo/Varani/curadoria_manual/dri/blast_Palb_EDTA_260$ cat Palb_donor_table.tsv | cut -f2 | sort -u | wc -l
+260
+
+~/enzo/Varani/curadoria_manual/dri$ cat blast_Psta_EDTA_4256/Psta_donor_table.tsv | cut -f2 | sort -u | wc -l
+233
+
+FRAGMENTOS total
+~/enzo/Varani/curadoria_manual/dri/blast_Psta_EDTA_4256$ wc -l Psta_donor_table_B.tsv
+810 Psta_donor_table_B.tsv
+dcanal@vm-pesq-Clarisse-OS23320:~/enzo/Varani/curadoria_manual/dri/blast_Palb_EDTA_260$ wc -l Palb_donor_table_B.tsv
+845 Palb_donor_table_B.tsv
+
+
+Helitrons que capturam FRAGMENTOS 
+~/enzo/Varani/curadoria_manual/dri$ cat blast_Psta_EDTA_4256/Psta_nfrag.tsv | cut -f1 | sort -u | wc -l
+559
+(base) dcanal@vm-pesq-Clarisse-OS23320:~/enzo/Varani/curadoria_manual/dri/blast_Palb_EDTA_260$ cat Palb_nfrag.tsv | cut -f1 | sort -u | wc -l
+540
+
+
+Promotores 
+(base) dcanal@vm-pesq-Clarisse-OS23320:~/enzo/Varani/curadoria_manual/dri/blast_Palb_EDTA_260$ cat Palb_prom_hits.tsv | cut -f 4 | sort -u | wc -l
+661
+
+
+
 #script abaixo pega o resultado do pipeline de EDTA + HELIANO, e junta todos os Helitrons e extrai o .fasta dos fragmentos com base na localização 
 
 ~/enzo/Varani/curadoria_manual/dri/extract_fragments.sh 
